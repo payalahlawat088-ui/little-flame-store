@@ -217,7 +217,7 @@ const INITIAL_SETTINGS = {
 
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
-    const timer = setTimeout(onClose, 5000);
+    const timer = setTimeout(onClose, 4000); 
     return () => clearTimeout(timer);
   }, [onClose]);
 
@@ -245,7 +245,7 @@ const ConfirmModal = ({ isOpen, message, onConfirm, onCancel }) => {
   );
 };
 
-// --- Main Components ---
+// --- Core Components ---
 
 const Navbar = ({ cartCount, wishlistCount, onCartClick, onWishlistClick, onSearchClick, isMobileMenuOpen, setIsMobileMenuOpen, onNavClick, shopMode, toggleShopMode, storeSettings }) => (
   <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
@@ -259,7 +259,9 @@ const Navbar = ({ cartCount, wishlistCount, onCartClick, onWishlistClick, onSear
           )}
           <span className="ml-2 text-2xl font-bold text-gray-900 tracking-tight">{storeSettings.name}</span>
           {shopMode === 'wholesale' && (
-            <span className="ml-2 px-2 py-0.5 rounded text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-200">WHOLESALE</span>
+            <span className="ml-2 px-2 py-0.5 rounded text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-200">
+              WHOLESALE
+            </span>
           )}
         </div>
 
@@ -502,75 +504,61 @@ const WishlistDrawer = ({ isOpen, onClose, wishlist, addToCart, removeFromWishli
   );
 };
 
-const ProductDetails = ({ product, onBack, addToCart, toggleWishlist, isInWishlist, allProducts, onProductClick, shopMode, storeSettings }) => {
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const recommendations = allProducts.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
-  useEffect(() => { window.scrollTo(0, 0); setSelectedImageIndex(0); }, [product]);
-  const retailPrice = Number(product.price);
-  const wholesalePrice = product.wholesalePrice ? Number(product.wholesalePrice) : Math.floor(retailPrice * 0.7);
-  const displayPrice = shopMode === 'wholesale' ? wholesalePrice : retailPrice;
-  const minQty = shopMode === 'wholesale' ? (product.moq || 5) : 1;
-  const validImages = product.images.filter(img => img && img.length > 0);
+const SupportChat = ({ isOpen, onClose, storeSettings }) => {
+  const [messages, setMessages] = useState([
+    { text: `Hi! Welcome to ${storeSettings.name} AI Support. How can I help you today?`, sender: 'bot' }
+  ]);
+  const [input, setInput] = useState("");
+  const messagesEndRef = useRef(null);
 
+  useEffect(() => { if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, isOpen]);
+
+  const openWhatsAppSupport = () => {
+    const text = encodeURIComponent(`Hello ${storeSettings.name} Support, I need help.`);
+    window.open(`https://wa.me/${storeSettings.contact.whatsapp}?text=${text}`, '_blank');
+  };
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+    const userMsg = { text: input, sender: 'user' };
+    setMessages(prev => [...prev, userMsg]);
+    setInput("");
+    setTimeout(() => {
+      let botResponse = "";
+      let isWhatsApp = false;
+      const lowerInput = input.toLowerCase();
+      if (lowerInput.includes("order") || lowerInput.includes("track") || lowerInput.includes("help") || lowerInput.includes("human") || lowerInput.includes("whatsapp")) {
+        botResponse = "For detailed support or tracking, please connect with our expert on WhatsApp.";
+        isWhatsApp = true;
+      } else if (lowerInput.includes("hello") || lowerInput.includes("hi")) {
+        botResponse = `Hello! Welcome to ${storeSettings.name}. How can I assist you?`;
+      } else {
+        botResponse = "I'm not sure about that. Would you like to chat with a human on WhatsApp?";
+        isWhatsApp = true;
+      }
+      setMessages(prev => [...prev, { text: botResponse, sender: 'bot', isWhatsApp }]);
+    }, 1000);
+  };
+
+  if (!isOpen) return null;
   return (
-    <div className="min-h-screen bg-gray-50 pt-4 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <button onClick={onBack} className="mb-6 flex items-center text-indigo-600 font-medium hover:underline"><ArrowLeft className="h-5 w-5 mr-1" /> Back to Shop</button>
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-            <div className="bg-gray-100 p-4">
-              <div className="aspect-w-1 aspect-h-1 w-full h-96 rounded-lg overflow-hidden mb-4 bg-white"><img src={validImages[selectedImageIndex] || "https://via.placeholder.com/400"} alt={product.name} className="w-full h-full object-contain" /></div>
-              <div className="flex space-x-2 overflow-x-auto pb-2 hide-scrollbar">
-                {validImages.map((img, idx) => (
-                  <button key={idx} onClick={() => setSelectedImageIndex(idx)} className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-all ${selectedImageIndex === idx ? 'border-indigo-600 ring-2 ring-indigo-200' : 'border-transparent hover:border-gray-300'}`}><img src={img} className="w-full h-full object-cover" alt={`View ${idx + 1}`} /></button>
-                ))}
-              </div>
-            </div>
-            <div className="p-8 md:p-12 flex flex-col justify-center">
-              <div className="flex justify-between items-start">
-                <div className="uppercase tracking-wide text-sm text-indigo-600 font-semibold">{product.category}</div>
-                {shopMode === 'wholesale' && <span className="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded border border-yellow-200">WHOLESALE PRICE</span>}
-              </div>
-              <h1 className="mt-2 text-3xl md:text-4xl font-extrabold text-gray-900">{product.name}</h1>
-              <div className="mt-2 flex items-center"><Star className="h-5 w-5 text-yellow-400 fill-current" /><span className="ml-2 text-gray-600">{product.rating} Rating</span></div>
-              <p className="mt-6 text-gray-500 text-lg leading-relaxed">{product.description || "Experience premium quality with this amazing product."}</p>
-              <div className="mt-8">
-                <span className="text-3xl font-bold text-gray-900">₹{displayPrice}</span>
-                {shopMode === 'wholesale' && <span className="ml-3 text-lg text-gray-400 line-through">₹{retailPrice}</span>}
-                {shopMode === 'wholesale' && <p className="text-sm text-red-500 mt-1 font-medium">Minimum Order Quantity: {minQty} units</p>}
-              </div>
-              <div className="mt-8 flex space-x-4">
-                <button onClick={() => addToCart(product, shopMode)} className="flex-1 bg-indigo-600 border border-transparent rounded-md py-4 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg hover:shadow-xl transition-all"><ShoppingBag className="h-5 w-5 mr-2" />Add to Cart {shopMode === 'wholesale' ? `(Min ${minQty})` : ''}</button>
-                <button onClick={() => toggleWishlist(product)} className={`flex-none border border-transparent rounded-md py-4 px-4 flex items-center justify-center transition-colors ${isInWishlist ? 'bg-pink-100 text-pink-600' : 'bg-gray-100 text-gray-500 hover:text-pink-500 hover:bg-gray-200'}`}><Heart className={`h-6 w-6 ${isInWishlist ? 'fill-current' : ''}`} /></button>
-              </div>
-            </div>
-          </div>
-        </div>
-        {product.video && (
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-16 p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center"><Video className="h-6 w-6 mr-2 text-indigo-600" /> Product Video</h2>
-            <div className="aspect-w-16 aspect-h-9 bg-black rounded-lg overflow-hidden flex items-center justify-center">
-              {product.video.includes('youtube') || product.video.includes('youtu.be') ? <div className="flex items-center justify-center h-64 bg-gray-100 text-gray-500"><p>YouTube Video Preview: {product.video}</p></div> : <video controls className="w-full h-full" src={product.video}>Your browser does not support the video tag.</video>}
-            </div>
-          </div>
-        )}
-        {recommendations.length > 0 && (
-          <div className="mt-16">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Recommended For You</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {recommendations.map(rec => (
-                <div key={rec.id} onClick={() => onProductClick(rec)} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow cursor-pointer overflow-hidden border border-gray-100 group">
-                  <div className="h-48 bg-gray-200 relative">
-                    <img src={rec.images[0]} alt={rec.name} className="w-full h-full object-cover absolute inset-0 transition-opacity duration-500 group-hover:opacity-0" />
-                    <img src={rec.images[1] || rec.images[0]} alt={rec.name} className="w-full h-full object-cover absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                  </div>
-                  <div className="p-4"><h3 className="font-bold text-gray-900 truncate">{rec.name}</h3><p className="text-indigo-600 font-medium mt-1">₹{shopMode === 'wholesale' ? (rec.wholesalePrice || Math.floor(rec.price * 0.7)) : rec.price}</p></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+    <div className="fixed bottom-4 right-4 z-50 w-80 md:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in slide-in-from-bottom-10">
+      <div className="bg-indigo-600 p-4 flex justify-between items-center text-white">
+        <div className="flex items-center"><MessageCircle className="h-5 w-5 mr-2" /><span className="font-bold">AI Support</span></div>
+        <button onClick={onClose}><X className="h-5 w-5" /></button>
       </div>
+      <div className="h-80 overflow-y-auto p-4 bg-gray-50 space-y-3">
+        {messages.map((msg, idx) => (
+          <div key={idx} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
+            <div className={`max-w-[85%] p-3 rounded-lg text-sm ${msg.sender === 'user' ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none shadow-sm'}`}>{msg.text}</div>
+            {msg.isWhatsApp && (
+              <button onClick={openWhatsAppSupport} className="mt-2 bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 px-4 rounded-full flex items-center shadow-sm transition-colors"><MessageCircle className="h-3 w-3 mr-1" />Chat on WhatsApp</button>
+            )}
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+      <div className="p-3 bg-white border-t border-gray-100 flex"><input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} placeholder="Type a message..." className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-indigo-600" /><button onClick={handleSend} className="ml-2 bg-indigo-600 text-white p-2 rounded-full hover:bg-indigo-700"><Send className="h-4 w-4" /></button></div>
     </div>
   );
 };
@@ -736,65 +724,6 @@ const AdminPanel = ({ isOpen, onClose, products, setProducts, storeSettings, set
   );
 };
 
-const SupportChat = ({ isOpen, onClose, storeSettings }) => {
-  const [messages, setMessages] = useState([
-    { text: `Hi! Welcome to ${storeSettings.name} AI Support. How can I help you today?`, sender: 'bot' }
-  ]);
-  const [input, setInput] = useState("");
-  const messagesEndRef = useRef(null);
-
-  useEffect(() => { if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, isOpen]);
-
-  const openWhatsAppSupport = () => {
-    const text = encodeURIComponent(`Hello ${storeSettings.name} Support, I need help.`);
-    window.open(`https://wa.me/${storeSettings.contact.whatsapp}?text=${text}`, '_blank');
-  };
-
-  const handleSend = () => {
-    if (!input.trim()) return;
-    const userMsg = { text: input, sender: 'user' };
-    setMessages(prev => [...prev, userMsg]);
-    setInput("");
-    setTimeout(() => {
-      let botResponse = "";
-      let isWhatsApp = false;
-      const lowerInput = input.toLowerCase();
-      if (lowerInput.includes("order") || lowerInput.includes("track") || lowerInput.includes("help") || lowerInput.includes("human") || lowerInput.includes("whatsapp")) {
-        botResponse = "For detailed support or tracking, please connect with our expert on WhatsApp.";
-        isWhatsApp = true;
-      } else if (lowerInput.includes("hello") || lowerInput.includes("hi")) {
-        botResponse = `Hello! Welcome to ${storeSettings.name}. How can I assist you?`;
-      } else {
-        botResponse = "I'm not sure about that. Would you like to chat with a human on WhatsApp?";
-        isWhatsApp = true;
-      }
-      setMessages(prev => [...prev, { text: botResponse, sender: 'bot', isWhatsApp }]);
-    }, 1000);
-  };
-
-  if (!isOpen) return null;
-  return (
-    <div className="fixed bottom-4 right-4 z-50 w-80 md:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in slide-in-from-bottom-10">
-      <div className="bg-indigo-600 p-4 flex justify-between items-center text-white">
-        <div className="flex items-center"><MessageCircle className="h-5 w-5 mr-2" /><span className="font-bold">AI Support</span></div>
-        <button onClick={onClose}><X className="h-5 w-5" /></button>
-      </div>
-      <div className="h-80 overflow-y-auto p-4 bg-gray-50 space-y-3">
-        {messages.map((msg, idx) => (
-          <div key={idx} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
-            <div className={`max-w-[85%] p-3 rounded-lg text-sm ${msg.sender === 'user' ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none shadow-sm'}`}>{msg.text}</div>
-            {msg.isWhatsApp && (
-              <button onClick={openWhatsAppSupport} className="mt-2 bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 px-4 rounded-full flex items-center shadow-sm transition-colors"><MessageCircle className="h-3 w-3 mr-1" />Chat on WhatsApp</button>
-            )}
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-      <div className="p-3 bg-white border-t border-gray-100 flex"><input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} placeholder="Type a message..." className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-indigo-600" /><button onClick={handleSend} className="ml-2 bg-indigo-600 text-white p-2 rounded-full hover:bg-indigo-700"><Send className="h-4 w-4" /></button></div>
-    </div>
-  );
-};
-
 const App = () => {
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
@@ -846,6 +775,9 @@ const App = () => {
   useEffect(() => {
     if (!user) return;
 
+    // Force setLoading false after 3 seconds to prevent infinite hang
+    const safetyTimer = setTimeout(() => setLoading(false), 3000);
+
     const unsubProducts = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'products'), (snapshot) => {
         const prods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         if (prods.length === 0 && snapshot.empty) {
@@ -885,7 +817,11 @@ const App = () => {
          console.log("Config listener error:", error);
     });
 
-    return () => { unsubProducts(); unsubConfig(); };
+    return () => { 
+      clearTimeout(safetyTimer);
+      unsubProducts(); 
+      unsubConfig(); 
+    };
   }, [user]);
 
   // --- Firebase Actions ---

@@ -1,1 +1,27 @@
-
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Little Flame Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    
+    <!-- Yahan global variables set kar rahe hain taaki App.jsx inhe padh sake -->
+    <script>
+      window.__app_id = 'little-flame-store';
+      window.__firebase_config = JSON.stringify({
+        // APNA ASLI FIREBASE CONFIG NIICHE PASTE KAREIN
+        apiKey: "AIzaSyB...", 
+        authDomain: "your-app.firebaseapp.com",
+        projectId: "your-app",
+        storageBucket: "your-app.appspot.com",
+        messagingSenderId: "12345...",
+        appId: "1:12345..."
+      });
+    </script>
+  </body>
+</html>

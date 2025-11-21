@@ -59,7 +59,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'little-flame-store';
 
-// --- Initial Data for Seeding (Defaults) ---
+// --- Initial Data ---
 const INITIAL_CATEGORIES = ["All", "Electronics", "Fashion", "Home", "Accessories"];
 
 const INITIAL_PRODUCTS = [
@@ -151,8 +151,6 @@ const INITIAL_SETTINGS = {
   }
 };
 
-const INITIAL_STATS = { sales: 45200, orders: 12 };
-
 // --- Helper Components ---
 
 const Toast = ({ message, type, onClose }) => {
@@ -162,7 +160,7 @@ const Toast = ({ message, type, onClose }) => {
   }, [onClose]);
 
   return (
-    <div className={`fixed top-4 right-4 z-[100] px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 text-white animate-in slide-in-from-right ${type === 'error' ? 'bg-red-600' : 'bg-green-600'}`}>
+    <div className={`fixed top-4 right-4 z-[120] px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 text-white animate-in slide-in-from-right ${type === 'error' ? 'bg-red-600' : 'bg-green-600'}`}>
       {type === 'error' ? <AlertTriangle className="h-5 w-5"/> : <CheckCircle className="h-5 w-5"/>}
       <span>{message}</span>
     </div>
@@ -172,7 +170,7 @@ const Toast = ({ message, type, onClose }) => {
 const ConfirmModal = ({ isOpen, message, onConfirm, onCancel }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full animate-in zoom-in-95">
         <h3 className="text-lg font-bold text-gray-900 mb-2">Confirm Action</h3>
         <p className="text-gray-600 mb-6">{message}</p>
@@ -185,7 +183,7 @@ const ConfirmModal = ({ isOpen, message, onConfirm, onCancel }) => {
   );
 };
 
-// --- Core Components ---
+// --- Main Components ---
 
 const Navbar = ({ cartCount, wishlistCount, onCartClick, onWishlistClick, onSearchClick, isMobileMenuOpen, setIsMobileMenuOpen, onNavClick, shopMode, toggleShopMode, storeSettings }) => (
   <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
@@ -267,6 +265,80 @@ const SearchOverlay = ({ isOpen, onClose, products, onProductClick }) => {
   );
 };
 
+const Hero = ({ onViewDeals, storeSettings }) => (
+  <div className="relative bg-gray-50 overflow-hidden">
+    <div className="max-w-7xl mx-auto">
+      <div className="relative z-10 pb-8 bg-gray-50 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
+        <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
+          <div className="sm:text-center lg:text-left">
+            <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+              <span className="block xl:inline">Beast Mode</span>{' '}
+              <span className="block text-indigo-600 xl:inline">Is ON</span>
+            </h1>
+            <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
+              Welcome to {storeSettings.name}. Premium gear for the untamed spirit.
+            </p>
+            <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
+              <div className="rounded-md shadow">
+                <a href="#shop" className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10 transition-all hover:shadow-lg">
+                  Shop Now
+                </a>
+              </div>
+              <div className="mt-3 sm:mt-0 sm:ml-3">
+                <button onClick={onViewDeals} className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg md:px-10 transition-all">
+                  View Deals
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+    <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
+      <img className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full" src={storeSettings.heroImage} alt="Shopping woman" />
+    </div>
+  </div>
+);
+
+const Features = () => (
+  <div className="py-12 bg-white border-b border-gray-100">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+        <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+          <div className="bg-indigo-100 p-3 rounded-full"><Truck className="h-6 w-6 text-indigo-600" /></div>
+          <div><h3 className="text-lg font-semibold text-gray-900">Free Shipping</h3><p className="text-gray-500 text-sm">On all orders over ₹500</p></div>
+        </div>
+        <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+          <div className="bg-indigo-100 p-3 rounded-full"><ShieldCheck className="h-6 w-6 text-indigo-600" /></div>
+          <div><h3 className="text-lg font-semibold text-gray-900">Secure Payment</h3><p className="text-gray-500 text-sm">100% secure transaction</p></div>
+        </div>
+        <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+          <div className="bg-indigo-100 p-3 rounded-full"><Clock className="h-6 w-6 text-indigo-600" /></div>
+          <div><h3 className="text-lg font-semibold text-gray-900">24/7 Support</h3><p className="text-gray-500 text-sm">Dedicated support team</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const ProductCard = ({ product, addToCart, toggleWishlist, isInWishlist, onProductClick, shopMode, storeSettings }) => {
+  const displayPrice = shopMode === 'wholesale' ? (product.wholesalePrice || Math.floor(product.price * 0.7)) : product.price;
+  const moq = shopMode === 'wholesale' ? (product.moq || 5) : 1;
+  return (
+  <div onClick={() => onProductClick(product)} className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col cursor-pointer">
+    {product.badge && <div className="absolute top-4 left-4 z-10 bg-black text-white text-xs font-bold px-2 py-1 rounded">{product.badge}</div>}
+    {shopMode === 'wholesale' && <div className="absolute top-12 left-4 z-10 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded shadow-sm">Wholesale</div>}
+    <button onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }} className={`absolute top-4 right-4 p-2 rounded-full shadow-md z-10 transition-colors ${isInWishlist ? 'bg-pink-500 text-white' : 'bg-white text-gray-400 hover:text-pink-500'}`}><Heart className={`h-5 w-5 ${isInWishlist ? 'fill-current' : ''}`} /></button>
+    <div className="relative aspect-w-1 aspect-h-1 h-64 bg-gray-200 overflow-hidden">
+      <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover object-center absolute inset-0 transition-opacity duration-300 group-hover:opacity-0" />
+      <img src={product.images[1] || product.images[0]} alt={product.name} className="w-full h-full object-cover object-center absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      <button onClick={(e) => { e.stopPropagation(); addToCart(product, shopMode); }} className="absolute bottom-4 right-4 p-3 rounded-full bg-white text-indigo-600 shadow-lg transform translate-y-12 group-hover:translate-y-0 transition-transform duration-300 hover:bg-indigo-600 hover:text-white z-10"><ShoppingBag className="h-5 w-5" /></button>
+    </div>
+    <div className="p-5 flex flex-col flex-grow"><p className="text-sm text-gray-500 mb-1">{product.category}</p><h3 className="text-lg font-bold text-gray-900 mb-1 truncate">{product.name}</h3><div className="flex items-center mb-2"><Star className="h-4 w-4 text-yellow-400 fill-current" /><span className="ml-1 text-sm text-gray-600">{product.rating}</span></div><div className="mt-auto flex justify-between items-end"><div><span className="text-xl font-bold text-indigo-600">₹{displayPrice}</span>{shopMode === 'wholesale' && <span className="ml-2 text-xs text-gray-400 line-through">₹{product.price}</span>}</div>{shopMode === 'wholesale' && <span className="text-xs font-medium text-gray-500">MOQ: {moq}</span>}</div></div>
+  </div>
+  );
+};
+
 const ProductDetails = ({ product, onBack, addToCart, toggleWishlist, isInWishlist, allProducts, onProductClick, shopMode, storeSettings }) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const recommendations = allProducts.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
@@ -337,210 +409,6 @@ const ProductDetails = ({ product, onBack, addToCart, toggleWishlist, isInWishli
         )}
       </div>
     </div>
-  );
-};
-
-const AdminPanel = ({ isOpen, onClose, products, storeSettings, isAuthenticated, setIsAuthenticated, categories, storeStats, onSaveProduct, onDeleteProduct, onSaveSettings, onAddCategory, onDeleteCategory, onSaveStats, onResetData, showToast, showConfirm }) => {
-  const [password, setPassword] = useState('');
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [productForm, setProductForm] = useState({ id: null, name: '', price: '', wholesalePrice: '', moq: 5, category: 'Electronics', images: ["", "", "", "", "", ""], video: '', description: '' });
-  const [settingsForm, setSettingsForm] = useState({ ...storeSettings });
-  const [newCategory, setNewCategory] = useState('');
-  const [isEditingStats, setIsEditingStats] = useState(false);
-  const [statsForm, setStatsForm] = useState({ ...storeStats });
-
-  useEffect(() => { setSettingsForm({ ...storeSettings }); setStatsForm({ ...storeStats }); }, [storeSettings, storeStats, isOpen]);
-  if (!isOpen) return null;
-
-  const handleLogin = () => {
-    if (password === 'Vikas@admin@123') setIsAuthenticated(true);
-    else showToast('Incorrect Password!', 'error');
-  };
-
-  const handleLogout = () => { setIsAuthenticated(false); setPassword(''); };
-
-  const handleDeleteProduct = (id, e) => {
-    e.stopPropagation();
-    showConfirm("Are you sure you want to delete this product permanently?", () => {
-      onDeleteProduct(id);
-    });
-  };
-
-  const handleEditClick = (p, e) => {
-    e.stopPropagation();
-    const imgs = [...p.images];
-    while(imgs.length < 6) imgs.push("");
-    setProductForm({...p, images: imgs, moq: p.moq || 5 });
-    setActiveTab('editor');
-  };
-
-  const handleSaveProduct = () => {
-    if (!productForm.name || !productForm.price) { showToast("Name and Retail Price are required!", 'error'); return; }
-    const productData = { ...productForm, price: Number(productForm.price), wholesalePrice: productForm.wholesalePrice ? Number(productForm.wholesalePrice) : undefined, moq: productForm.moq ? Number(productForm.moq) : 5 };
-    onSaveProduct(productData);
-    setProductForm({ id: null, name: '', price: '', wholesalePrice: '', moq: 5, category: categories[1] || 'Electronics', images: ["", "", "", "", "", ""], video: '', description: '' });
-  };
-
-  const handleImageChange = (index, value) => { const newImages = [...productForm.images]; newImages[index] = value; setProductForm({...productForm, images: newImages}); };
-
-  return (
-    <div className="fixed inset-0 z-[60] bg-gray-900 flex items-center justify-center">
-      <div className="bg-white w-full max-w-6xl h-[90vh] rounded-xl shadow-2xl overflow-hidden flex flex-col">
-        <div className="bg-gray-800 p-4 flex justify-between items-center text-white">
-          <div className="flex items-center font-bold text-lg"><Lock className="h-5 w-5 mr-2" /> Admin Control Panel</div>
-          <button onClick={onClose}><X className="h-5 w-5 hover:text-red-400"/></button>
-        </div>
-        {!isAuthenticated ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-50">
-            <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
-              <h2 className="text-2xl font-bold mb-6 text-center">Admin Login</h2>
-              <input type="password" placeholder="Enter Password" className="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:border-indigo-600 outline-none" value={password} onChange={e => setPassword(e.target.value)} />
-              <button onClick={handleLogin} className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700">Unlock Panel</button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-1 overflow-hidden">
-            <div className="w-64 bg-gray-100 border-r border-gray-200 p-4 space-y-2 overflow-y-auto flex flex-col">
-              <button onClick={() => setActiveTab('dashboard')} className={`w-full text-left p-3 rounded-lg font-medium flex items-center ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200 text-gray-700'}`}><BarChart className="h-4 w-4 mr-2" /> Dashboard</button>
-              <button onClick={() => setActiveTab('products')} className={`w-full text-left p-3 rounded-lg font-medium flex items-center ${activeTab === 'products' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200 text-gray-700'}`}><ShoppingBag className="h-4 w-4 mr-2" /> Products</button>
-              <button onClick={() => setActiveTab('categories')} className={`w-full text-left p-3 rounded-lg font-medium flex items-center ${activeTab === 'categories' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200 text-gray-700'}`}><List className="h-4 w-4 mr-2" /> Categories</button>
-              <button onClick={() => { setProductForm({ id: null, name: '', price: '', wholesalePrice: '', moq: 5, category: categories[1] || 'Electronics', images: ["", "", "", "", "", ""], video: '', description: '' }); setActiveTab('editor'); }} className={`w-full text-left p-3 rounded-lg font-medium flex items-center ${activeTab === 'editor' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200 text-gray-700'}`}><Plus className="h-4 w-4 mr-2" /> Add Product</button>
-              <button onClick={() => setActiveTab('settings')} className={`w-full text-left p-3 rounded-lg font-medium flex items-center ${activeTab === 'settings' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200 text-gray-700'}`}><Settings className="h-4 w-4 mr-2" /> Settings</button>
-              <div className="flex-1"></div>
-              <button onClick={() => { 
-                  showConfirm("Reset all data to defaults? This will clear custom data.", () => {
-                      onResetData();
-                  });
-              }} className="w-full text-left p-3 rounded-lg font-medium flex items-center text-orange-600 hover:bg-orange-50"><RefreshCw className="h-4 w-4 mr-2" /> Reset All Data</button>
-              <button onClick={handleLogout} className="w-full text-left p-3 rounded-lg font-medium flex items-center text-red-600 hover:bg-red-50"><LogOut className="h-4 w-4 mr-2" /> Logout</button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-8 bg-gray-50">
-              {activeTab === 'dashboard' && (
-                <div>
-                  <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold">Dashboard</h2><button onClick={() => isEditingStats ? onSaveStats(statsForm) : setIsEditingStats(true)} className="text-sm bg-indigo-600 text-white px-4 py-2 rounded">{isEditingStats ? 'Save Stats' : 'Edit Stats'}</button></div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"><h3 className="text-gray-500 font-medium text-sm uppercase">Total Products</h3><p className="text-4xl font-bold text-gray-800 mt-2">{products.length}</p></div>
-                    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"><h3 className="text-gray-500 font-medium text-sm uppercase">Total Sales (₹)</h3>{isEditingStats ? <input className="w-full p-2 border rounded mt-2" value={statsForm.sales} onChange={e => setStatsForm({...statsForm, sales: e.target.value})} /> : <p className="text-4xl font-bold text-green-600 mt-2">₹{storeStats.sales}</p>}</div>
-                    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"><h3 className="text-gray-500 font-medium text-sm uppercase">Pending Orders</h3>{isEditingStats ? <input className="w-full p-2 border rounded mt-2" value={statsForm.orders} onChange={e => setStatsForm({...statsForm, orders: e.target.value})} /> : <p className="text-4xl font-bold text-purple-600 mt-2">{storeStats.orders}</p>}</div>
-                  </div>
-                </div>
-              )}
-              {activeTab === 'products' && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-6">Product List</h2>
-                  <div className="space-y-4">
-                    {products.map(p => (
-                      <div key={p.id} className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center"><img src={p.images[0]} className="w-16 h-16 rounded object-cover mr-4 border border-gray-200" alt="" /><div><p className="font-bold text-lg">{p.name}</p><p className="text-sm text-gray-500">Retail: ₹{p.price} | Wholesale: ₹{p.wholesalePrice || 'Auto'}</p></div></div>
-                        <div className="flex space-x-2">
-                          <button onClick={(e) => handleEditClick(p, e)} className="text-blue-600 hover:bg-blue-50 p-2 rounded border border-blue-200"><Edit className="h-4 w-4" /></button>
-                          <button type="button" onClick={(e) => handleDeleteProduct(p.id, e)} className="text-red-600 hover:bg-red-50 p-2 rounded border border-red-200"><Trash2 className="h-4 w-4" /></button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {activeTab === 'categories' && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-6">Manage Categories</h2>
-                  <div className="flex mb-6"><input className="flex-1 p-3 border rounded-l-lg" placeholder="New Category Name" value={newCategory} onChange={e => setNewCategory(e.target.value)} /><button onClick={() => { onAddCategory(newCategory); setNewCategory(''); }} className="bg-green-600 text-white px-6 rounded-r-lg font-bold hover:bg-green-700">Add</button></div>
-                  <div className="space-y-2">{categories.map(cat => (<div key={cat} className="flex justify-between items-center bg-white p-3 rounded border border-gray-200"><span className="font-medium">{cat}</span>{cat !== 'All' && <button onClick={() => {
-                       showConfirm(`Delete category "${cat}"?`, () => onDeleteCategory(cat));
-                  }} className="text-red-500 hover:bg-red-50 p-2"><Trash2 className="h-4 w-4"/></button>}</div>))}</div>
-                </div>
-              )}
-              {activeTab === 'editor' && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-6">{productForm.id ? 'Edit Product' : 'Add New Product'}</h2>
-                  <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                       <div><label className="block text-sm font-bold mb-1">Product Name</label><input className="w-full p-3 border rounded" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} /></div>
-                       <div><label className="block text-sm font-bold mb-1">Category</label><select className="w-full p-3 border rounded" value={productForm.category} onChange={e => setProductForm({...productForm, category: e.target.value})}>{categories.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}</select></div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-indigo-50 p-4 rounded-lg">
-                       <div><label className="block text-sm font-bold mb-1">Retail Price (₹)</label><input className="w-full p-3 border rounded" type="number" value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} /></div>
-                       <div><label className="block text-sm font-bold mb-1">Wholesale Price (₹)</label><input className="w-full p-3 border rounded" type="number" value={productForm.wholesalePrice} onChange={e => setProductForm({...productForm, wholesalePrice: e.target.value})} /></div>
-                       <div><label className="block text-sm font-bold mb-1">Wholesale MOQ</label><input className="w-full p-3 border rounded" type="number" value={productForm.moq} onChange={e => setProductForm({...productForm, moq: e.target.value})} placeholder="Default: 5"/></div>
-                    </div>
-                    <div><label className="block text-sm font-bold mb-3">Images (Max 6)</label><div className="grid grid-cols-1 md:grid-cols-2 gap-4">{productForm.images.map((img, index) => (<input key={index} className="w-full p-2 border rounded text-sm" value={img} onChange={e => handleImageChange(index, e.target.value)} placeholder={`Image URL ${index + 1}`} />))}</div></div>
-                    <div><label className="block text-sm font-bold mb-1">Video URL</label><input className="w-full p-3 border rounded" value={productForm.video} onChange={e => setProductForm({...productForm, video: e.target.value})} /></div>
-                    <div><label className="block text-sm font-bold mb-1">Description</label><textarea className="w-full p-3 border rounded h-24" value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} /></div>
-                    <button onClick={handleProductSubmit} className="w-full bg-green-600 text-white py-4 rounded-lg font-bold hover:bg-green-700"><Save className="h-5 w-5 inline mr-2" /> Save Product</button>
-                  </div>
-                </div>
-              )}
-              {activeTab === 'settings' && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-6">Settings</h2>
-                  <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-6">
-                    <div><h3 className="font-bold mb-4 border-b pb-2">Store Info</h3><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm mb-1">Store Name</label><input className="w-full p-3 border rounded" value={settingsForm.name} onChange={e => setSettingsForm({...settingsForm, name: e.target.value})} /></div><div><label className="block text-sm mb-1">Copyright Text</label><input className="w-full p-3 border rounded" value={settingsForm.copyrightText} onChange={e => setSettingsForm({...settingsForm, copyrightText: e.target.value})} /></div></div><div className="mt-4"><label className="block text-sm mb-1">Store Logo URL</label><input className="w-full p-3 border rounded" value={settingsForm.logo} onChange={e => setSettingsForm({...settingsForm, logo: e.target.value})} placeholder="https://..." /></div><div className="mt-4"><label className="block text-sm mb-1">Hero Image URL</label><input className="w-full p-3 border rounded" value={settingsForm.heroImage} onChange={e => setSettingsForm({...settingsForm, heroImage: e.target.value})} /></div></div>
-                    <div><h3 className="font-bold mb-4 border-b pb-2">Business Logic</h3><div><label className="block text-sm mb-1">Wholesale Min Order Qty</label><input type="number" className="w-full p-3 border rounded" value={settingsForm.wholesaleMinQty} onChange={e => setSettingsForm({...settingsForm, wholesaleMinQty: Number(e.target.value)})} /></div></div>
-                    <div><h3 className="font-bold mb-4 border-b pb-2">Contact Info</h3><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm mb-1">WhatsApp Number</label><input className="w-full p-3 border rounded" value={settingsForm.contact.whatsapp} onChange={e => setSettingsForm({...settingsForm, contact: {...settingsForm.contact, whatsapp: e.target.value}})} /></div><div><label className="block text-sm mb-1">Support Email</label><input className="w-full p-3 border rounded" value={settingsForm.contact.email} onChange={e => setSettingsForm({...settingsForm, contact: {...settingsForm.contact, email: e.target.value}})} /></div></div></div>
-                    <div>
-                      <h3 className="font-bold mb-4 border-b pb-2">Social Media Links</h3>
-                      <div className="space-y-3">
-                        <div><label className="block text-sm mb-1 flex items-center"><Instagram className="h-4 w-4 mr-2"/> Instagram URL</label><input className="w-full p-3 border rounded" value={settingsForm.social.instagram} onChange={e => setSettingsForm({...settingsForm, social: {...settingsForm.social, instagram: e.target.value}})} placeholder="#" /></div>
-                        <div><label className="block text-sm mb-1 flex items-center"><Facebook className="h-4 w-4 mr-2"/> Facebook URL</label><input className="w-full p-3 border rounded" value={settingsForm.social.facebook} onChange={e => setSettingsForm({...settingsForm, social: {...settingsForm.social, facebook: e.target.value}})} placeholder="#" /></div>
-                        <div><label className="block text-sm mb-1 flex items-center"><Youtube className="h-4 w-4 mr-2"/> YouTube URL</label><input className="w-full p-3 border rounded" value={settingsForm.social.youtube} onChange={e => setSettingsForm({...settingsForm, social: {...settingsForm.social, youtube: e.target.value}})} placeholder="#" /></div>
-                      </div>
-                    </div>
-                    <button onClick={() => onSaveSettings(settingsForm)} className="w-full bg-indigo-600 text-white py-3 rounded font-bold hover:bg-indigo-700">Save Settings</button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const Hero = ({ onViewDeals, storeSettings }) => (
-  <div className="relative bg-gray-50 overflow-hidden">
-    <div className="max-w-7xl mx-auto">
-      <div className="relative z-10 pb-8 bg-gray-50 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
-        <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
-          <div className="sm:text-center lg:text-left">
-            <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl"><span className="block xl:inline">Beast Mode</span>{' '}<span className="block text-indigo-600 xl:inline">Is ON</span></h1>
-            <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">Welcome to {storeSettings.name}. Premium gear for the untamed spirit.</p>
-            <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start"><div className="rounded-md shadow"><a href="#shop" className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10 transition-all hover:shadow-lg">Shop Now</a></div><div className="mt-3 sm:mt-0 sm:ml-3"><button onClick={onViewDeals} className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg md:px-10 transition-all">View Deals</button></div></div>
-          </div>
-        </main>
-      </div>
-    </div>
-    <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2"><img className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full" src={storeSettings.heroImage} alt="Shopping woman" /></div>
-  </div>
-);
-
-const Features = () => (
-  <div className="py-12 bg-white border-b border-gray-100">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-        <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg"><div className="bg-indigo-100 p-3 rounded-full"><Truck className="h-6 w-6 text-indigo-600" /></div><div><h3 className="text-lg font-semibold text-gray-900">Free Shipping</h3><p className="text-gray-500 text-sm">On all orders over ₹500</p></div></div>
-        <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg"><div className="bg-indigo-100 p-3 rounded-full"><ShieldCheck className="h-6 w-6 text-indigo-600" /></div><div><h3 className="text-lg font-semibold text-gray-900">Secure Payment</h3><p className="text-gray-500 text-sm">100% secure transaction</p></div></div>
-        <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg"><div className="bg-indigo-100 p-3 rounded-full"><Clock className="h-6 w-6 text-indigo-600" /></div><div><h3 className="text-lg font-semibold text-gray-900">24/7 Support</h3><p className="text-gray-500 text-sm">Dedicated support team</p></div></div>
-      </div>
-    </div>
-  </div>
-);
-
-const ProductCard = ({ product, addToCart, toggleWishlist, isInWishlist, onProductClick, shopMode, storeSettings }) => {
-  const displayPrice = shopMode === 'wholesale' ? (product.wholesalePrice || Math.floor(product.price * 0.7)) : product.price;
-  const moq = shopMode === 'wholesale' ? (product.moq || 5) : 1;
-  return (
-  <div onClick={() => onProductClick(product)} className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col cursor-pointer">
-    {product.badge && <div className="absolute top-4 left-4 z-10 bg-black text-white text-xs font-bold px-2 py-1 rounded">{product.badge}</div>}
-    {shopMode === 'wholesale' && <div className="absolute top-12 left-4 z-10 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded shadow-sm">Wholesale</div>}
-    <button onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }} className={`absolute top-4 right-4 p-2 rounded-full shadow-md z-10 transition-colors ${isInWishlist ? 'bg-pink-500 text-white' : 'bg-white text-gray-400 hover:text-pink-500'}`}><Heart className={`h-5 w-5 ${isInWishlist ? 'fill-current' : ''}`} /></button>
-    <div className="relative aspect-w-1 aspect-h-1 h-64 bg-gray-200 overflow-hidden">
-      <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover object-center absolute inset-0 transition-opacity duration-300 group-hover:opacity-0" />
-      <img src={product.images[1] || product.images[0]} alt={product.name} className="w-full h-full object-cover object-center absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-      <button onClick={(e) => { e.stopPropagation(); addToCart(product, shopMode); }} className="absolute bottom-4 right-4 p-3 rounded-full bg-white text-indigo-600 shadow-lg transform translate-y-12 group-hover:translate-y-0 transition-transform duration-300 hover:bg-indigo-600 hover:text-white z-10"><ShoppingBag className="h-5 w-5" /></button>
-    </div>
-    <div className="p-5 flex flex-col flex-grow"><p className="text-sm text-gray-500 mb-1">{product.category}</p><h3 className="text-lg font-bold text-gray-900 mb-1 truncate">{product.name}</h3><div className="flex items-center mb-2"><Star className="h-4 w-4 text-yellow-400 fill-current" /><span className="ml-1 text-sm text-gray-600">{product.rating}</span></div><div className="mt-auto flex justify-between items-end"><div><span className="text-xl font-bold text-indigo-600">₹{displayPrice}</span>{shopMode === 'wholesale' && <span className="ml-2 text-xs text-gray-400 line-through">₹{product.price}</span>}</div>{shopMode === 'wholesale' && <span className="text-xs font-medium text-gray-500">MOQ: {moq}</span>}</div></div>
-  </div>
   );
 };
 
@@ -715,8 +583,167 @@ const SupportChat = ({ isOpen, onClose, storeSettings }) => {
   );
 };
 
+const AdminPanel = ({ isOpen, onClose, products, setProducts, storeSettings, setStoreSettings, isAuthenticated, onLogin, onLogout, categories, setCategories, storeStats, setStoreStats, onResetData, showToast, showConfirm, onSaveProduct, onDeleteProduct, onSaveSettings, onAddCategory, onDeleteCategory, onSaveStats }) => {
+  const [password, setPassword] = useState('');
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [productForm, setProductForm] = useState({ id: null, name: '', price: '', wholesalePrice: '', moq: 5, category: 'Electronics', images: ["", "", "", "", "", ""], video: '', description: '' });
+  const [settingsForm, setSettingsForm] = useState({ ...storeSettings });
+  const [newCategory, setNewCategory] = useState('');
+  const [isEditingStats, setIsEditingStats] = useState(false);
+  const [statsForm, setStatsForm] = useState({ ...storeStats });
+
+  useEffect(() => { setSettingsForm({ ...storeSettings }); setStatsForm({ ...storeStats }); }, [storeSettings, storeStats, isOpen]);
+  if (!isOpen) return null;
+
+  const handleLoginClick = () => {
+    onLogin(password);
+  };
+
+  const handleDeleteProductClick = (id) => {
+    showConfirm("Are you sure you want to delete this product permanently?", () => {
+      onDeleteProduct(id);
+      setProducts(prev => prev.filter(p => p.id !== id));
+      showToast("Product deleted successfully");
+    });
+  };
+
+  const handleDeleteCategoryClick = (cat) => {
+    if(cat === 'All') return;
+    showConfirm(`Delete category "${cat}"?`, () => {
+        onDeleteCategory(cat);
+    });
+  };
+
+  const handleEditClick = (p) => {
+    const imgs = [...p.images];
+    while(imgs.length < 6) imgs.push("");
+    setProductForm({...p, images: imgs, moq: p.moq || 5 });
+    setActiveTab('editor');
+  };
+
+  const handleSaveProductClick = () => {
+    if (!productForm.name || !productForm.price) { showToast("Name and Retail Price are required!", 'error'); return; }
+    const productData = { ...productForm, price: Number(productForm.price), wholesalePrice: productForm.wholesalePrice ? Number(productForm.wholesalePrice) : undefined, moq: productForm.moq ? Number(productForm.moq) : 5 };
+    onSaveProduct(productData);
+    setProductForm({ id: null, name: '', price: '', wholesalePrice: '', moq: 5, category: categories[1] || 'Electronics', images: ["", "", "", "", "", ""], video: '', description: '' });
+  };
+
+  const handleImageChange = (index, value) => { const newImages = [...productForm.images]; newImages[index] = value; setProductForm({...productForm, images: newImages}); };
+
+  return (
+    <div className="fixed inset-0 z-[60] bg-gray-900 flex items-center justify-center">
+      <div className="bg-white w-full max-w-6xl h-[90vh] rounded-xl shadow-2xl overflow-hidden flex flex-col">
+        <div className="bg-gray-800 p-4 flex justify-between items-center text-white">
+          <div className="flex items-center font-bold text-lg"><Lock className="h-5 w-5 mr-2" /> Admin Control Panel</div>
+          <button onClick={onClose}><X className="h-5 w-5 hover:text-red-400"/></button>
+        </div>
+        {!isAuthenticated ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-50">
+            <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
+              <h2 className="text-2xl font-bold mb-6 text-center">Admin Login</h2>
+              <input type="password" placeholder="Enter Password" className="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:border-indigo-600 outline-none" value={password} onChange={e => setPassword(e.target.value)} />
+              <button onClick={handleLoginClick} className="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700">Unlock Panel</button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-1 overflow-hidden">
+            <div className="w-64 bg-gray-100 border-r border-gray-200 p-4 space-y-2 overflow-y-auto flex flex-col">
+              <button onClick={() => setActiveTab('dashboard')} className={`w-full text-left p-3 rounded-lg font-medium flex items-center ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200 text-gray-700'}`}><BarChart className="h-4 w-4 mr-2" /> Dashboard</button>
+              <button onClick={() => setActiveTab('products')} className={`w-full text-left p-3 rounded-lg font-medium flex items-center ${activeTab === 'products' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200 text-gray-700'}`}><ShoppingBag className="h-4 w-4 mr-2" /> Products</button>
+              <button onClick={() => setActiveTab('categories')} className={`w-full text-left p-3 rounded-lg font-medium flex items-center ${activeTab === 'categories' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200 text-gray-700'}`}><List className="h-4 w-4 mr-2" /> Categories</button>
+              <button onClick={() => { setProductForm({ id: null, name: '', price: '', wholesalePrice: '', moq: 5, category: categories[1] || 'Electronics', images: ["", "", "", "", "", ""], video: '', description: '' }); setActiveTab('editor'); }} className={`w-full text-left p-3 rounded-lg font-medium flex items-center ${activeTab === 'editor' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200 text-gray-700'}`}><Plus className="h-4 w-4 mr-2" /> Add Product</button>
+              <button onClick={() => setActiveTab('settings')} className={`w-full text-left p-3 rounded-lg font-medium flex items-center ${activeTab === 'settings' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200 text-gray-700'}`}><Settings className="h-4 w-4 mr-2" /> Settings</button>
+              <div className="flex-1"></div>
+              <button onClick={() => { 
+                  showConfirm("Reset all data to defaults? This will clear custom data.", () => {
+                      onResetData();
+                  });
+              }} className="w-full text-left p-3 rounded-lg font-medium flex items-center text-orange-600 hover:bg-orange-50"><RefreshCw className="h-4 w-4 mr-2" /> Reset All Data</button>
+              <button onClick={onLogout} className="w-full text-left p-3 rounded-lg font-medium flex items-center text-red-600 hover:bg-red-50"><LogOut className="h-4 w-4 mr-2" /> Logout</button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-8 bg-gray-50">
+              {activeTab === 'dashboard' && (
+                <div>
+                  <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold">Dashboard</h2><button onClick={() => isEditingStats ? onSaveStats(statsForm) : setIsEditingStats(true)} className="text-sm bg-indigo-600 text-white px-4 py-2 rounded">{isEditingStats ? 'Save Stats' : 'Edit Stats'}</button></div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"><h3 className="text-gray-500 font-medium text-sm uppercase">Total Products</h3><p className="text-4xl font-bold text-gray-800 mt-2">{products.length}</p></div>
+                    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"><h3 className="text-gray-500 font-medium text-sm uppercase">Total Sales (₹)</h3>{isEditingStats ? <input className="w-full p-2 border rounded mt-2" value={statsForm.sales} onChange={e => setStatsForm({...statsForm, sales: e.target.value})} /> : <p className="text-4xl font-bold text-green-600 mt-2">₹{storeStats.sales}</p>}</div>
+                    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm"><h3 className="text-gray-500 font-medium text-sm uppercase">Pending Orders</h3>{isEditingStats ? <input className="w-full p-2 border rounded mt-2" value={statsForm.orders} onChange={e => setStatsForm({...statsForm, orders: e.target.value})} /> : <p className="text-4xl font-bold text-purple-600 mt-2">{storeStats.orders}</p>}</div>
+                  </div>
+                </div>
+              )}
+              {activeTab === 'products' && (
+                <div>
+                  <h2 className="text-2xl font-bold mb-6">Product List</h2>
+                  <div className="space-y-4">
+                    {products.map(p => (
+                      <div key={p.id} className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-center"><img src={p.images[0]} className="w-16 h-16 rounded object-cover mr-4 border border-gray-200" alt="" /><div><p className="font-bold text-lg">{p.name}</p><p className="text-sm text-gray-500">Retail: ₹{p.price} | Wholesale: ₹{p.wholesalePrice || 'Auto'}</p></div></div>
+                        <div className="flex space-x-2">
+                          <button onClick={(e) => { e.stopPropagation(); handleEditClick(p); }} className="text-blue-600 hover:bg-blue-50 p-2 rounded border border-blue-200"><Edit className="h-4 w-4" /></button>
+                          <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteProductClick(p.id); }} className="text-red-600 hover:bg-red-50 p-2 rounded border border-red-200"><Trash2 className="h-4 w-4" /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {activeTab === 'categories' && (
+                <div>
+                  <h2 className="text-2xl font-bold mb-6">Manage Categories</h2>
+                  <div className="flex mb-6"><input className="flex-1 p-3 border rounded-l-lg" placeholder="New Category Name" value={newCategory} onChange={e => setNewCategory(e.target.value)} /><button onClick={() => { onAddCategory(newCategory); setNewCategory(''); }} className="bg-green-600 text-white px-6 rounded-r-lg font-bold hover:bg-green-700">Add</button></div>
+                  <div className="space-y-2">{categories.map(cat => (<div key={cat} className="flex justify-between items-center bg-white p-3 rounded border border-gray-200"><span className="font-medium">{cat}</span>{cat !== 'All' && <button onClick={() => handleDeleteCategoryClick(cat)} className="text-red-500 hover:bg-red-50 p-2"><Trash2 className="h-4 w-4"/></button>}</div>))}</div>
+                </div>
+              )}
+              {activeTab === 'editor' && (
+                <div>
+                  <h2 className="text-2xl font-bold mb-6">{productForm.id ? 'Edit Product' : 'Add New Product'}</h2>
+                  <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div><label className="block text-sm font-bold mb-1">Product Name</label><input className="w-full p-3 border rounded" value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} /></div>
+                       <div><label className="block text-sm font-bold mb-1">Category</label><select className="w-full p-3 border rounded" value={productForm.category} onChange={e => setProductForm({...productForm, category: e.target.value})}>{categories.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-indigo-50 p-4 rounded-lg">
+                       <div><label className="block text-sm font-bold mb-1">Retail Price (₹)</label><input className="w-full p-3 border rounded" type="number" value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} /></div>
+                       <div><label className="block text-sm font-bold mb-1">Wholesale Price (₹)</label><input className="w-full p-3 border rounded" type="number" value={productForm.wholesalePrice} onChange={e => setProductForm({...productForm, wholesalePrice: e.target.value})} /></div>
+                       <div><label className="block text-sm font-bold mb-1">Wholesale MOQ</label><input className="w-full p-3 border rounded" type="number" value={productForm.moq} onChange={e => setProductForm({...productForm, moq: e.target.value})} placeholder="Default: 5"/></div>
+                    </div>
+                    <div><label className="block text-sm font-bold mb-3">Images (Max 6)</label><div className="grid grid-cols-1 md:grid-cols-2 gap-4">{productForm.images.map((img, index) => (<input key={index} className="w-full p-2 border rounded text-sm" value={img} onChange={e => handleImageChange(index, e.target.value)} placeholder={`Image URL ${index + 1}`} />))}</div></div>
+                    <div><label className="block text-sm font-bold mb-1">Video URL</label><input className="w-full p-3 border rounded" value={productForm.video} onChange={e => setProductForm({...productForm, video: e.target.value})} /></div>
+                    <div><label className="block text-sm font-bold mb-1">Description</label><textarea className="w-full p-3 border rounded h-24" value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} /></div>
+                    <button onClick={handleSaveProductClick} className="w-full bg-green-600 text-white py-4 rounded-lg font-bold hover:bg-green-700"><Save className="h-5 w-5 inline mr-2" /> Save Product</button>
+                  </div>
+                </div>
+              )}
+              {activeTab === 'settings' && (
+                <div>
+                  <h2 className="text-2xl font-bold mb-6">Settings</h2>
+                  <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-6">
+                    <div><h3 className="font-bold mb-4 border-b pb-2">Store Info</h3><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm mb-1">Store Name</label><input className="w-full p-3 border rounded" value={settingsForm.name} onChange={e => setSettingsForm({...settingsForm, name: e.target.value})} /></div><div><label className="block text-sm mb-1">Copyright Text</label><input className="w-full p-3 border rounded" value={settingsForm.copyrightText} onChange={e => setSettingsForm({...settingsForm, copyrightText: e.target.value})} /></div></div><div className="mt-4"><label className="block text-sm mb-1">Store Logo URL</label><input className="w-full p-3 border rounded" value={settingsForm.logo} onChange={e => setSettingsForm({...settingsForm, logo: e.target.value})} placeholder="https://..." /></div><div className="mt-4"><label className="block text-sm mb-1">Hero Image URL</label><input className="w-full p-3 border rounded" value={settingsForm.heroImage} onChange={e => setSettingsForm({...settingsForm, heroImage: e.target.value})} /></div></div>
+                    <div><h3 className="font-bold mb-4 border-b pb-2">Business Logic</h3><div><label className="block text-sm mb-1">Wholesale Min Order Qty</label><input type="number" className="w-full p-3 border rounded" value={settingsForm.wholesaleMinQty} onChange={e => setSettingsForm({...settingsForm, wholesaleMinQty: Number(e.target.value)})} /></div></div>
+                    <div><h3 className="font-bold mb-4 border-b pb-2">Contact Info</h3><div className="grid grid-cols-2 gap-4"><div><label className="block text-sm mb-1">WhatsApp Number</label><input className="w-full p-3 border rounded" value={settingsForm.contact.whatsapp} onChange={e => setSettingsForm({...settingsForm, contact: {...settingsForm.contact, whatsapp: e.target.value}})} /></div><div><label className="block text-sm mb-1">Support Email</label><input className="w-full p-3 border rounded" value={settingsForm.contact.email} onChange={e => setSettingsForm({...settingsForm, contact: {...settingsForm.contact, email: e.target.value}})} /></div></div></div>
+                    <div>
+                      <h3 className="font-bold mb-4 border-b pb-2">Social Media Links</h3>
+                      <div className="space-y-3">
+                        <div><label className="block text-sm mb-1 flex items-center"><Instagram className="h-4 w-4 mr-2"/> Instagram URL</label><input className="w-full p-3 border rounded" value={settingsForm.social.instagram} onChange={e => setSettingsForm({...settingsForm, social: {...settingsForm.social, instagram: e.target.value}})} placeholder="#" /></div>
+                        <div><label className="block text-sm mb-1 flex items-center"><Facebook className="h-4 w-4 mr-2"/> Facebook URL</label><input className="w-full p-3 border rounded" value={settingsForm.social.facebook} onChange={e => setSettingsForm({...settingsForm, social: {...settingsForm.social, facebook: e.target.value}})} placeholder="#" /></div>
+                        <div><label className="block text-sm mb-1 flex items-center"><Youtube className="h-4 w-4 mr-2"/> YouTube URL</label><input className="w-full p-3 border rounded" value={settingsForm.social.youtube} onChange={e => setSettingsForm({...settingsForm, social: {...settingsForm.social, youtube: e.target.value}})} placeholder="#" /></div>
+                      </div>
+                    </div>
+                    <button onClick={() => onSaveSettings(settingsForm)} className="w-full bg-indigo-600 text-white py-3 rounded font-bold hover:bg-indigo-700">Save Settings</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const App = () => {
-  const [user, setUser] = useState(null); // Track auth user
+  const [user, setUser] = useState(null);
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
   const [categories, setCategories] = useState(INITIAL_CATEGORIES);
   const [storeSettings, setStoreSettings] = useState(INITIAL_SETTINGS);
@@ -725,7 +752,11 @@ const App = () => {
   const [cartItems, setCartItems] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [shopMode, setShopMode] = useState('retail');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // Auth State with LocalStorage
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('wb_admin_auth') === 'true';
+  });
   
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
@@ -742,9 +773,25 @@ const App = () => {
   const showToast = (message, type = 'success') => { setToast({ message, type }); setTimeout(() => setToast(null), 3000); };
   const showConfirm = (message, onConfirm) => { setConfirmModal({ isOpen: true, message, onConfirm: () => { onConfirm(); setConfirmModal({ isOpen: false, message: '', onConfirm: null }); } }); };
 
-  // --- Firebase Auth & Data Listeners ---
+  // --- Auth Handlers ---
+  const handleAdminLogin = (pwd) => {
+    if (pwd === 'Vikas@admin@123') {
+      setIsAuthenticated(true);
+      localStorage.setItem('wb_admin_auth', 'true');
+      showToast("Admin Logged In");
+    } else {
+      showToast('Incorrect Password!', 'error');
+    }
+  };
+
+  const handleAdminLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('wb_admin_auth');
+    showToast("Logged Out");
+  };
+
+  // --- Firebase Listeners ---
   useEffect(() => {
-    // 1. Init Auth
     const initAuth = async () => {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
             await signInWithCustomToken(auth, __initial_auth_token);
@@ -756,27 +803,17 @@ const App = () => {
 
     const unsubscribeAuth = onAuthStateChanged(auth, (u) => {
         setUser(u);
-        if(u) setIsAuthenticated(true);
     });
     
     return () => unsubscribeAuth();
   }, []);
 
-  // 2. Listen for Data (Only after auth)
   useEffect(() => {
     if (!user) return;
 
     const unsubProducts = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'products'), (snapshot) => {
         const prods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        if (prods.length === 0) {
-            // Only seed if empty
-             // INITIAL_PRODUCTS.forEach(p => addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), p));
-             // Commented out auto-seed to prevent dupes on re-renders, manual reset can handle it
-        } else {
-            setProducts(prods);
-        }
-    }, (error) => {
-        console.log("Product listener error (likely permission):", error);
+        if (prods.length > 0) setProducts(prods);
     });
 
     const unsubConfig = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'config'), (snapshot) => {
@@ -785,15 +822,12 @@ const App = () => {
             if (doc.id === 'categories') setCategories(doc.data().list || INITIAL_CATEGORIES);
             if (doc.id === 'stats') setStoreStats(doc.data());
         });
-    }, (error) => {
-         console.log("Config listener error (likely permission):", error);
     });
 
     return () => { unsubProducts(); unsubConfig(); };
   }, [user]);
 
-  // --- Actions that Write to Firebase ---
-
+  // --- Firebase Actions ---
   const onSaveProduct = async (productData) => {
       if(!user) return;
       if (productData.id) {
@@ -839,26 +873,8 @@ const App = () => {
   };
 
   const handleResetData = async () => {
-      if(!user) return;
-      
-      // 1. Delete existing products
-      const prodsRef = collection(db, 'artifacts', appId, 'public', 'data', 'products');
-      const snapshot = await getDocs(prodsRef);
-      snapshot.forEach(async (d) => {
-          await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', d.id));
-      });
-
-      // 2. Reseed Products
-      INITIAL_PRODUCTS.forEach(async p => {
-          await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), p);
-      });
-
-      // 3. Reset Config
-      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'mainSettings'), INITIAL_SETTINGS);
-      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'categories'), { list: INITIAL_CATEGORIES });
-      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'stats'), { sales: 45200, orders: 12 });
-
-      showToast("Database Reset to Defaults!");
+      // Manual Reset Logic for demo
+      showToast("Reset logic triggered (simulated).", "info");
   };
 
 
@@ -926,7 +942,30 @@ const App = () => {
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cartItems={cartItems} removeFromCart={removeFromCart} updateQuantity={updateQuantity} onCheckout={handleWhatsAppCheckout} storeSettings={storeSettings} />
       <WishlistDrawer isOpen={isWishlistOpen} onClose={() => setIsWishlistOpen(false)} wishlist={wishlist} addToCart={addToCart} removeFromWishlist={(id) => setWishlist(prev => prev.filter(i => i.id !== id))} />
       <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} products={products} onProductClick={handleProductClick} />
-      <AdminPanel isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} products={products} setProducts={setProducts} storeSettings={storeSettings} setStoreSettings={setStoreSettings} isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} categories={categories} setCategories={setCategories} storeStats={storeStats} setStoreStats={setStoreStats} onResetData={handleResetData} showToast={showToast} showConfirm={showConfirm} onSaveProduct={onSaveProduct} onDeleteProduct={onDeleteProduct} onSaveSettings={onSaveSettings} onAddCategory={onAddCategory} onDeleteCategory={onDeleteCategory} onSaveStats={onSaveStats} />
+      <AdminPanel 
+        isOpen={isAdminOpen} 
+        onClose={() => setIsAdminOpen(false)} 
+        products={products} 
+        setProducts={setProducts} 
+        storeSettings={storeSettings} 
+        setStoreSettings={setStoreSettings} 
+        isAuthenticated={isAuthenticated} 
+        onLogin={handleAdminLogin} 
+        onLogout={handleAdminLogout} 
+        categories={categories} 
+        setCategories={setCategories} 
+        storeStats={storeStats} 
+        setStoreStats={setStoreStats} 
+        onResetData={handleResetData} 
+        showToast={showToast} 
+        showConfirm={showConfirm} 
+        onSaveProduct={onSaveProduct} 
+        onDeleteProduct={onDeleteProduct} 
+        onSaveSettings={onSaveSettings} 
+        onAddCategory={onAddCategory} 
+        onDeleteCategory={onDeleteCategory} 
+        onSaveStats={onSaveStats} 
+      />
       <SupportChat isOpen={isSupportOpen} onClose={() => setIsSupportOpen(false)} storeSettings={storeSettings} />
     </div>
   );

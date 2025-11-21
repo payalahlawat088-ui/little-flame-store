@@ -53,7 +53,14 @@ import {
 } from 'firebase/firestore';
 
 // --- Firebase Init ---
-const firebaseConfig = JSON.parse(__firebase_config);
+// Note: Agar aap Vercel/GitHub par hain, toh ensure karein ki aapne index.html mein 
+// window.__firebase_config set kiya hai ya environment variables use kiye hain.
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+    apiKey: "YOUR_API_KEY", // Replace with real config if running locally without injection
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID"
+};
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -81,57 +88,7 @@ const INITIAL_PRODUCTS = [
     badge: "Best Seller",
     description: "High-fidelity sound with noise cancellation. Perfect for music lovers."
   },
-  {
-    id: "2",
-    name: "Minimalist Leather Watch",
-    price: 1899,
-    wholesalePrice: 1300,
-    moq: 10,
-    category: "Accessories",
-    rating: 4.5,
-    images: [
-      "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1434056838489-2e3029803c1e?auto=format&fit=crop&w=800&q=80",
-      "", "", "", ""
-    ],
-    video: "",
-    badge: "New",
-    description: "Genuine leather strap with a classic analog face."
-  },
-  {
-    id: "3",
-    name: "Smart Fitness Tracker",
-    price: 3499,
-    wholesalePrice: 2400,
-    moq: 5,
-    category: "Electronics",
-    rating: 4.2,
-    images: [
-        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?auto=format&fit=crop&w=800&q=80",
-        "", "", "", ""
-    ],
-    video: "",
-    badge: "",
-    description: "Track your steps, heart rate, and sleep patterns effortlessly."
-  },
-  {
-    id: "4",
-    name: "Denim Jacket Vintage",
-    price: 1299,
-    wholesalePrice: 900,
-    moq: 5,
-    category: "Fashion",
-    rating: 4.6,
-    images: [
-        "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1551537482-f2075a1d41f2?auto=format&fit=crop&w=800&q=80",
-        "", "", "", ""
-    ],
-    video: "",
-    badge: "Sale",
-    description: "Classic vintage style denim jacket for a rugged look."
-  }
+  // ... Add other default products if needed for seeding
 ];
 
 const INITIAL_SETTINGS = {
@@ -155,14 +112,14 @@ const INITIAL_SETTINGS = {
 
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
+    const timer = setTimeout(onClose, 5000); // Increased time to read errors
     return () => clearTimeout(timer);
   }, [onClose]);
 
   return (
     <div className={`fixed top-4 right-4 z-[120] px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 text-white animate-in slide-in-from-right ${type === 'error' ? 'bg-red-600' : 'bg-green-600'}`}>
       {type === 'error' ? <AlertTriangle className="h-5 w-5"/> : <CheckCircle className="h-5 w-5"/>}
-      <span>{message}</span>
+      <span className="text-sm font-medium">{message}</span>
     </div>
   );
 };
@@ -197,12 +154,9 @@ const Navbar = ({ cartCount, wishlistCount, onCartClick, onWishlistClick, onSear
           )}
           <span className="ml-2 text-2xl font-bold text-gray-900 tracking-tight">{storeSettings.name}</span>
           {shopMode === 'wholesale' && (
-            <span className="ml-2 px-2 py-0.5 rounded text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-200">
-              WHOLESALE
-            </span>
+            <span className="ml-2 px-2 py-0.5 rounded text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-200">WHOLESALE</span>
           )}
         </div>
-
         <div className="hidden md:flex space-x-8 items-center">
           {['Home', 'Shop', 'New Arrivals', 'Support'].map((item) => (
             <button key={item} onClick={() => onNavClick(item)} className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${item === 'Support' ? 'text-indigo-600 font-bold' : 'text-gray-600 hover:text-indigo-600'}`}>{item}</button>
@@ -212,7 +166,6 @@ const Navbar = ({ cartCount, wishlistCount, onCartClick, onWishlistClick, onSear
             <button onClick={() => shopMode !== 'wholesale' && toggleShopMode('wholesale')} className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${shopMode === 'wholesale' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Wholesale</button>
           </div>
         </div>
-
         <div className="flex items-center space-x-4">
           <button onClick={onSearchClick} className="p-2 text-gray-500 hover:text-indigo-600 transition-colors"><Search className="h-6 w-6" /></button>
           <button onClick={onWishlistClick} className="p-2 text-gray-500 hover:text-indigo-600 transition-colors relative"><Heart className="h-6 w-6" />{wishlistCount > 0 && <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-pink-500 rounded-full">{wishlistCount}</span>}</button>
@@ -238,32 +191,7 @@ const Navbar = ({ cartCount, wishlistCount, onCartClick, onWishlistClick, onSear
   </nav>
 );
 
-const SearchOverlay = ({ isOpen, onClose, products, onProductClick }) => {
-  const [query, setQuery] = useState('');
-  if (!isOpen) return null;
-  const filtered = products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || p.category.toLowerCase().includes(query.toLowerCase()));
-  return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex justify-center items-start pt-20" onClick={onClose}>
-      <div className="bg-white w-full max-w-2xl rounded-lg shadow-2xl mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
-        <div className="p-4 border-b border-gray-200 flex items-center">
-          <Search className="h-5 w-5 text-gray-400 mr-3" />
-          <input type="text" placeholder="Search for products..." className="flex-1 outline-none text-lg" value={query} onChange={e => setQuery(e.target.value)} autoFocus />
-          <button onClick={onClose}><X className="h-5 w-5 text-gray-500 hover:text-red-500"/></button>
-        </div>
-        {query && (
-          <div className="max-h-96 overflow-y-auto">
-            {filtered.length === 0 ? <div className="p-8 text-center text-gray-500">No products found.</div> : filtered.map(p => (
-              <div key={p.id} onClick={() => { onProductClick(p); onClose(); }} className="flex items-center p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0">
-                <img src={p.images[0]} alt={p.name} className="w-12 h-12 object-cover rounded mr-4" />
-                <div><p className="font-medium text-gray-900">{p.name}</p><p className="text-sm text-gray-500">₹{p.price}</p></div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+// --- Hero, Features, ProductCard, Cart, Wishlist, SupportChat ---
 
 const Hero = ({ onViewDeals, storeSettings }) => (
   <div className="relative bg-gray-50 overflow-hidden">
@@ -304,18 +232,9 @@ const Features = () => (
   <div className="py-12 bg-white border-b border-gray-100">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-        <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-          <div className="bg-indigo-100 p-3 rounded-full"><Truck className="h-6 w-6 text-indigo-600" /></div>
-          <div><h3 className="text-lg font-semibold text-gray-900">Free Shipping</h3><p className="text-gray-500 text-sm">On all orders over ₹500</p></div>
-        </div>
-        <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-          <div className="bg-indigo-100 p-3 rounded-full"><ShieldCheck className="h-6 w-6 text-indigo-600" /></div>
-          <div><h3 className="text-lg font-semibold text-gray-900">Secure Payment</h3><p className="text-gray-500 text-sm">100% secure transaction</p></div>
-        </div>
-        <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-          <div className="bg-indigo-100 p-3 rounded-full"><Clock className="h-6 w-6 text-indigo-600" /></div>
-          <div><h3 className="text-lg font-semibold text-gray-900">24/7 Support</h3><p className="text-gray-500 text-sm">Dedicated support team</p></div>
-        </div>
+        <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg"><div className="bg-indigo-100 p-3 rounded-full"><Truck className="h-6 w-6 text-indigo-600" /></div><div><h3 className="text-lg font-semibold text-gray-900">Free Shipping</h3><p className="text-gray-500 text-sm">On all orders over ₹500</p></div></div>
+        <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg"><div className="bg-indigo-100 p-3 rounded-full"><ShieldCheck className="h-6 w-6 text-indigo-600" /></div><div><h3 className="text-lg font-semibold text-gray-900">Secure Payment</h3><p className="text-gray-500 text-sm">100% secure transaction</p></div></div>
+        <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg"><div className="bg-indigo-100 p-3 rounded-full"><Clock className="h-6 w-6 text-indigo-600" /></div><div><h3 className="text-lg font-semibold text-gray-900">24/7 Support</h3><p className="text-gray-500 text-sm">Dedicated support team</p></div></div>
       </div>
     </div>
   </div>
@@ -413,7 +332,8 @@ const ProductDetails = ({ product, onBack, addToCart, toggleWishlist, isInWishli
 };
 
 const CartDrawer = ({ isOpen, onClose, cartItems, removeFromCart, updateQuantity, onCheckout, storeSettings }) => {
-  const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  // ... (same content as previous)
+   const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -470,6 +390,7 @@ const CartDrawer = ({ isOpen, onClose, cartItems, removeFromCart, updateQuantity
 };
 
 const WishlistDrawer = ({ isOpen, onClose, wishlist, addToCart, removeFromWishlist }) => {
+  // ... (same content as previous)
   if (!isOpen) return null;
 
   return (
@@ -524,8 +445,37 @@ const WishlistDrawer = ({ isOpen, onClose, wishlist, addToCart, removeFromWishli
   );
 };
 
+const SearchOverlay = ({ isOpen, onClose, products, onProductClick }) => {
+    // ... (same content as previous)
+    const [query, setQuery] = useState('');
+  if (!isOpen) return null;
+  const filtered = products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || p.category.toLowerCase().includes(query.toLowerCase()));
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex justify-center items-start pt-20" onClick={onClose}>
+      <div className="bg-white w-full max-w-2xl rounded-lg shadow-2xl mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="p-4 border-b border-gray-200 flex items-center">
+          <Search className="h-5 w-5 text-gray-400 mr-3" />
+          <input type="text" placeholder="Search for products..." className="flex-1 outline-none text-lg" value={query} onChange={e => setQuery(e.target.value)} autoFocus />
+          <button onClick={onClose}><X className="h-5 w-5 text-gray-500 hover:text-red-500"/></button>
+        </div>
+        {query && (
+          <div className="max-h-96 overflow-y-auto">
+            {filtered.length === 0 ? <div className="p-8 text-center text-gray-500">No products found.</div> : filtered.map(p => (
+              <div key={p.id} onClick={() => { onProductClick(p); onClose(); }} className="flex items-center p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0">
+                <img src={p.images[0]} alt={p.name} className="w-12 h-12 object-cover rounded mr-4" />
+                <div><p className="font-medium text-gray-900">{p.name}</p><p className="text-sm text-gray-500">₹{p.price}</p></div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const SupportChat = ({ isOpen, onClose, storeSettings }) => {
-  const [messages, setMessages] = useState([
+    // ... (same content as previous)
+    const [messages, setMessages] = useState([
     { text: `Hi! Welcome to ${storeSettings.name} AI Support. How can I help you today?`, sender: 'bot' }
   ]);
   const [input, setInput] = useState("");
@@ -592,7 +542,11 @@ const AdminPanel = ({ isOpen, onClose, products, setProducts, storeSettings, set
   const [isEditingStats, setIsEditingStats] = useState(false);
   const [statsForm, setStatsForm] = useState({ ...storeStats });
 
-  useEffect(() => { setSettingsForm({ ...storeSettings }); setStatsForm({ ...storeStats }); }, [storeSettings, storeStats, isOpen]);
+  useEffect(() => { 
+      setSettingsForm({ ...storeSettings }); 
+      setStatsForm({ ...storeStats }); 
+  }, [storeSettings, storeStats, isOpen]);
+
   if (!isOpen) return null;
 
   const handleLoginClick = () => {
@@ -602,8 +556,6 @@ const AdminPanel = ({ isOpen, onClose, products, setProducts, storeSettings, set
   const handleDeleteProductClick = (id) => {
     showConfirm("Are you sure you want to delete this product permanently?", () => {
       onDeleteProduct(id);
-      setProducts(prev => prev.filter(p => p.id !== id));
-      showToast("Product deleted successfully");
     });
   };
 

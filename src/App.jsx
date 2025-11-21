@@ -34,7 +34,8 @@ import {
   DollarSign,
   RefreshCw,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Loader
 } from 'lucide-react';
 
 // Firebase Imports
@@ -49,18 +50,12 @@ import {
   deleteDoc, 
   addDoc,
   query,
-  getDocs 
+  getDocs,
+  writeBatch 
 } from 'firebase/firestore';
 
 // --- Firebase Init ---
-// Note: Agar aap Vercel/GitHub par hain, toh ensure karein ki aapne index.html mein 
-// window.__firebase_config set kiya hai ya environment variables use kiye hain.
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-    apiKey: "YOUR_API_KEY", // Replace with real config if running locally without injection
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID"
-};
-
+const firebaseConfig = JSON.parse(__firebase_config);
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -71,7 +66,6 @@ const INITIAL_CATEGORIES = ["All", "Electronics", "Fashion", "Home", "Accessorie
 
 const INITIAL_PRODUCTS = [
   {
-    id: "1",
     name: "Premium Wireless Headphones",
     price: 2499,
     wholesalePrice: 1750,
@@ -88,7 +82,118 @@ const INITIAL_PRODUCTS = [
     badge: "Best Seller",
     description: "High-fidelity sound with noise cancellation. Perfect for music lovers."
   },
-  // ... Add other default products if needed for seeding
+  {
+    name: "Minimalist Leather Watch",
+    price: 1899,
+    wholesalePrice: 1300,
+    moq: 10,
+    category: "Accessories",
+    rating: 4.5,
+    images: [
+      "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1434056838489-2e3029803c1e?auto=format&fit=crop&w=800&q=80",
+      "", "", "", ""
+    ],
+    video: "",
+    badge: "New",
+    description: "Genuine leather strap with a classic analog face."
+  },
+  {
+    name: "Smart Fitness Tracker",
+    price: 3499,
+    wholesalePrice: 2400,
+    moq: 5,
+    category: "Electronics",
+    rating: 4.2,
+    images: [
+        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?auto=format&fit=crop&w=800&q=80",
+        "", "", "", ""
+    ],
+    video: "",
+    badge: "",
+    description: "Track your steps, heart rate, and sleep patterns effortlessly."
+  },
+  {
+    name: "Denim Jacket Vintage",
+    price: 1299,
+    wholesalePrice: 900,
+    moq: 5,
+    category: "Fashion",
+    rating: 4.6,
+    images: [
+        "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1551537482-f2075a1d41f2?auto=format&fit=crop&w=800&q=80",
+        "", "", "", ""
+    ],
+    video: "",
+    badge: "Sale",
+    description: "Classic vintage style denim jacket for a rugged look."
+  },
+  {
+    name: "Modern Desk Lamp",
+    price: 899,
+    wholesalePrice: 600,
+    moq: 12,
+    category: "Home",
+    rating: 4.9,
+    images: [
+        "https://images.unsplash.com/photo-1507473888900-52e1adad5420?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1513506003013-3b5460884591?auto=format&fit=crop&w=800&q=80",
+        "", "", "", ""
+    ],
+    video: "",
+    badge: "",
+    description: "Adjustable LED desk lamp with touch control brightness."
+  },
+  {
+    name: "Canvas Sneakers",
+    price: 1599,
+    wholesalePrice: 1100,
+    moq: 5,
+    category: "Fashion",
+    rating: 4.4,
+    images: [
+        "https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1600185365926-3a2d3cd47a47?auto=format&fit=crop&w=800&q=80",
+        "", "", "", ""
+    ],
+    video: "",
+    badge: "New",
+    description: "Comfortable everyday sneakers with durable canvas material."
+  },
+  {
+    name: "Ergonomic Office Chair",
+    price: 8999,
+    wholesalePrice: 6500,
+    moq: 2,
+    category: "Home",
+    rating: 4.7,
+    images: [
+        "https://images.unsplash.com/photo-1592078615290-033ee584e267?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1580480055273-228ff5388ef8?auto=format&fit=crop&w=800&q=80",
+        "", "", "", ""
+    ],
+    video: "",
+    badge: "Free Shipping",
+    description: "Lumbar support and adjustable height for long working hours."
+  },
+  {
+    name: "Polarized Sunglasses",
+    price: 999,
+    wholesalePrice: 650,
+    moq: 20,
+    category: "Accessories",
+    rating: 4.3,
+    images: [
+        "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=800&q=80",
+        "", "", "", ""
+    ],
+    video: "",
+    badge: "New",
+    description: "UV protection with style. Perfect for sunny days."
+  }
 ];
 
 const INITIAL_SETTINGS = {
@@ -112,7 +217,7 @@ const INITIAL_SETTINGS = {
 
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
-    const timer = setTimeout(onClose, 5000); // Increased time to read errors
+    const timer = setTimeout(onClose, 5000);
     return () => clearTimeout(timer);
   }, [onClose]);
 
@@ -157,6 +262,7 @@ const Navbar = ({ cartCount, wishlistCount, onCartClick, onWishlistClick, onSear
             <span className="ml-2 px-2 py-0.5 rounded text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-200">WHOLESALE</span>
           )}
         </div>
+
         <div className="hidden md:flex space-x-8 items-center">
           {['Home', 'Shop', 'New Arrivals', 'Support'].map((item) => (
             <button key={item} onClick={() => onNavClick(item)} className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${item === 'Support' ? 'text-indigo-600 font-bold' : 'text-gray-600 hover:text-indigo-600'}`}>{item}</button>
@@ -166,6 +272,7 @@ const Navbar = ({ cartCount, wishlistCount, onCartClick, onWishlistClick, onSear
             <button onClick={() => shopMode !== 'wholesale' && toggleShopMode('wholesale')} className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${shopMode === 'wholesale' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Wholesale</button>
           </div>
         </div>
+
         <div className="flex items-center space-x-4">
           <button onClick={onSearchClick} className="p-2 text-gray-500 hover:text-indigo-600 transition-colors"><Search className="h-6 w-6" /></button>
           <button onClick={onWishlistClick} className="p-2 text-gray-500 hover:text-indigo-600 transition-colors relative"><Heart className="h-6 w-6" />{wishlistCount > 0 && <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-pink-500 rounded-full">{wishlistCount}</span>}</button>
@@ -191,7 +298,32 @@ const Navbar = ({ cartCount, wishlistCount, onCartClick, onWishlistClick, onSear
   </nav>
 );
 
-// --- Hero, Features, ProductCard, Cart, Wishlist, SupportChat ---
+const SearchOverlay = ({ isOpen, onClose, products, onProductClick }) => {
+  const [query, setQuery] = useState('');
+  if (!isOpen) return null;
+  const filtered = products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || p.category.toLowerCase().includes(query.toLowerCase()));
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex justify-center items-start pt-20" onClick={onClose}>
+      <div className="bg-white w-full max-w-2xl rounded-lg shadow-2xl mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="p-4 border-b border-gray-200 flex items-center">
+          <Search className="h-5 w-5 text-gray-400 mr-3" />
+          <input type="text" placeholder="Search for products..." className="flex-1 outline-none text-lg" value={query} onChange={e => setQuery(e.target.value)} autoFocus />
+          <button onClick={onClose}><X className="h-5 w-5 text-gray-500 hover:text-red-500"/></button>
+        </div>
+        {query && (
+          <div className="max-h-96 overflow-y-auto">
+            {filtered.length === 0 ? <div className="p-8 text-center text-gray-500">No products found.</div> : filtered.map(p => (
+              <div key={p.id} onClick={() => { onProductClick(p); onClose(); }} className="flex items-center p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0">
+                <img src={p.images[0]} alt={p.name} className="w-12 h-12 object-cover rounded mr-4" />
+                <div><p className="font-medium text-gray-900">{p.name}</p><p className="text-sm text-gray-500">₹{p.price}</p></div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const Hero = ({ onViewDeals, storeSettings }) => (
   <div className="relative bg-gray-50 overflow-hidden">
@@ -255,6 +387,118 @@ const ProductCard = ({ product, addToCart, toggleWishlist, isInWishlist, onProdu
     </div>
     <div className="p-5 flex flex-col flex-grow"><p className="text-sm text-gray-500 mb-1">{product.category}</p><h3 className="text-lg font-bold text-gray-900 mb-1 truncate">{product.name}</h3><div className="flex items-center mb-2"><Star className="h-4 w-4 text-yellow-400 fill-current" /><span className="ml-1 text-sm text-gray-600">{product.rating}</span></div><div className="mt-auto flex justify-between items-end"><div><span className="text-xl font-bold text-indigo-600">₹{displayPrice}</span>{shopMode === 'wholesale' && <span className="ml-2 text-xs text-gray-400 line-through">₹{product.price}</span>}</div>{shopMode === 'wholesale' && <span className="text-xs font-medium text-gray-500">MOQ: {moq}</span>}</div></div>
   </div>
+  );
+};
+
+const CartDrawer = ({ isOpen, onClose, cartItems, removeFromCart, updateQuantity, onCheckout, storeSettings }) => {
+  const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 overflow-hidden">
+      <div className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose} />
+      <div className="fixed inset-y-0 right-0 pl-10 max-w-full flex">
+        <div className="w-screen max-w-md">
+          <div className="h-full flex flex-col bg-white shadow-xl">
+            <div className="flex-1 py-6 overflow-y-auto px-4 sm:px-6">
+              <div className="flex items-start justify-between"><h2 className="text-lg font-medium text-gray-900">Shopping Cart</h2><div className="ml-3 h-7 flex items-center"><button onClick={onClose} className="-m-2 p-2 text-gray-400 hover:text-gray-500"><X className="h-6 w-6" /></button></div></div>
+              <div className="mt-8">
+                {cartItems.length === 0 ? (
+                  <div className="text-center py-12"><ShoppingBag className="mx-auto h-12 w-12 text-gray-300" /><p className="mt-4 text-gray-500">Your cart is empty.</p><button onClick={onClose} className="mt-4 text-indigo-600 font-medium hover:text-indigo-500">Start Shopping &rarr;</button></div>
+                ) : (
+                  <div className="flow-root">
+                    <ul className="-my-6 divide-y divide-gray-200">
+                      {cartItems.map((item) => (
+                        <li key={item.id} className="py-6 flex">
+                          <div className="flex-shrink-0 w-24 h-24 border border-gray-200 rounded-md overflow-hidden"><img src={item.images[0]} alt={item.name} className="w-full h-full object-center object-cover" /></div>
+                          <div className="ml-4 flex-1 flex flex-col">
+                            <div>
+                              <div className="flex justify-between text-base font-medium text-gray-900">
+                                <h3>{item.name}</h3>
+                                <p className="ml-4">₹{item.price * item.quantity}</p>
+                              </div>
+                              <div className="flex items-center mt-1">
+                                <p className="text-sm text-gray-500">{item.category}</p>
+                                {item.mode === 'wholesale' && (
+                                  <span className="ml-2 text-[10px] font-bold bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded">WHOLESALE (MOQ: {item.moq || 5})</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex-1 flex items-end justify-between text-sm"><div className="flex items-center border rounded-md"><button onClick={() => updateQuantity(item.id, -1)} className="px-2 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50" disabled={item.quantity <= (item.mode === 'wholesale' ? (item.moq || 5) : 1)}>-</button><span className="px-2 text-gray-900">{item.quantity}</span><button onClick={() => updateQuantity(item.id, 1)} className="px-2 py-1 text-gray-600 hover:bg-gray-100">+</button></div><button type="button" onClick={() => removeFromCart(item.id)} className="font-medium text-indigo-600 hover:text-indigo-500">Remove</button></div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+            {cartItems.length > 0 && (
+              <div className="border-t border-gray-200 py-6 px-4 sm:px-6">
+                <div className="flex justify-between text-base font-medium text-gray-900"><p>Subtotal</p><p>₹{total}</p></div>
+                <p className="mt-0.5 text-sm text-gray-500">Shipping and taxes calculated at checkout.</p>
+                <div className="mt-6"><button onClick={onCheckout} className="w-full flex justify-center items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-green-600 hover:bg-green-700"><MessageCircle className="h-5 w-5 mr-2" />Order on WhatsApp</button></div>
+                <div className="mt-6 flex justify-center text-sm text-center text-gray-500"><p>or{' '}<button type="button" className="text-indigo-600 font-medium hover:text-indigo-500" onClick={onClose}>Continue Shopping<span aria-hidden="true"> &rarr;</span></button></p></div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const WishlistDrawer = ({ isOpen, onClose, wishlist, addToCart, removeFromWishlist }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-hidden">
+      <div className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose} />
+      <div className="fixed inset-y-0 right-0 pl-10 max-w-full flex">
+        <div className="w-screen max-w-md">
+          <div className="h-full flex flex-col bg-white shadow-xl">
+            <div className="flex-1 py-6 overflow-y-auto px-4 sm:px-6">
+              <div className="flex items-start justify-between">
+                <h2 className="text-lg font-medium text-gray-900">My Wishlist ({wishlist.length})</h2>
+                <div className="ml-3 h-7 flex items-center">
+                  <button onClick={onClose} className="-m-2 p-2 text-gray-400 hover:text-gray-500">
+                    <X className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+              <div className="mt-8">
+                {wishlist.length === 0 ? (
+                   <div className="text-center py-10 text-gray-500">Your wishlist is empty.</div>
+                ) : (
+                  <div className="flow-root">
+                    <ul className="-my-6 divide-y divide-gray-200">
+                      {wishlist.map((item) => (
+                        <li key={item.id} className="py-6 flex">
+                          <div className="flex-shrink-0 w-24 h-24 border border-gray-200 rounded-md overflow-hidden">
+                            <img src={item.images[0]} alt={item.name} className="w-full h-full object-center object-cover" />
+                          </div>
+                          <div className="ml-4 flex-1 flex flex-col">
+                            <div>
+                              <div className="flex justify-between text-base font-medium text-gray-900">
+                                <h3>{item.name}</h3>
+                                <p className="ml-4">₹{item.price}</p>
+                              </div>
+                            </div>
+                            <div className="flex-1 flex items-end justify-between text-sm">
+                              <button onClick={() => addToCart(item)} className="text-indigo-600 font-medium hover:text-indigo-500">Move to Cart</button>
+                              <button onClick={() => removeFromWishlist(item.id)} className="text-red-600 font-medium hover:text-red-500">Remove</button>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -327,208 +571,6 @@ const ProductDetails = ({ product, onBack, addToCart, toggleWishlist, isInWishli
           </div>
         )}
       </div>
-    </div>
-  );
-};
-
-const CartDrawer = ({ isOpen, onClose, cartItems, removeFromCart, updateQuantity, onCheckout, storeSettings }) => {
-  // ... (same content as previous)
-   const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      <div className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 pl-10 max-w-full flex">
-        <div className="w-screen max-w-md">
-          <div className="h-full flex flex-col bg-white shadow-xl">
-            <div className="flex-1 py-6 overflow-y-auto px-4 sm:px-6">
-              <div className="flex items-start justify-between"><h2 className="text-lg font-medium text-gray-900">Shopping Cart</h2><div className="ml-3 h-7 flex items-center"><button onClick={onClose} className="-m-2 p-2 text-gray-400 hover:text-gray-500"><X className="h-6 w-6" /></button></div></div>
-              <div className="mt-8">
-                {cartItems.length === 0 ? (
-                  <div className="text-center py-12"><ShoppingBag className="mx-auto h-12 w-12 text-gray-300" /><p className="mt-4 text-gray-500">Your cart is empty.</p><button onClick={onClose} className="mt-4 text-indigo-600 font-medium hover:text-indigo-500">Start Shopping &rarr;</button></div>
-                ) : (
-                  <div className="flow-root">
-                    <ul className="-my-6 divide-y divide-gray-200">
-                      {cartItems.map((item) => (
-                        <li key={item.id} className="py-6 flex">
-                          <div className="flex-shrink-0 w-24 h-24 border border-gray-200 rounded-md overflow-hidden"><img src={item.images[0]} alt={item.name} className="w-full h-full object-center object-cover" /></div>
-                          <div className="ml-4 flex-1 flex flex-col">
-                            <div>
-                              <div className="flex justify-between text-base font-medium text-gray-900">
-                                <h3>{item.name}</h3>
-                                <p className="ml-4">₹{item.price * item.quantity}</p>
-                              </div>
-                              <div className="flex items-center mt-1">
-                                <p className="text-sm text-gray-500">{item.category}</p>
-                                {item.mode === 'wholesale' && (
-                                  <span className="ml-2 text-[10px] font-bold bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded">WHOLESALE (MOQ: {item.moq || 5})</span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex-1 flex items-end justify-between text-sm"><div className="flex items-center border rounded-md"><button onClick={() => updateQuantity(item.id, -1)} className="px-2 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50" disabled={item.quantity <= (item.mode === 'wholesale' ? (item.moq || 5) : 1)}>-</button><span className="px-2 text-gray-900">{item.quantity}</span><button onClick={() => updateQuantity(item.id, 1)} className="px-2 py-1 text-gray-600 hover:bg-gray-100">+</button></div><button type="button" onClick={() => removeFromCart(item.id)} className="font-medium text-indigo-600 hover:text-indigo-500">Remove</button></div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </div>
-            {cartItems.length > 0 && (
-              <div className="border-t border-gray-200 py-6 px-4 sm:px-6">
-                <div className="flex justify-between text-base font-medium text-gray-900"><p>Subtotal</p><p>₹{total}</p></div>
-                <p className="mt-0.5 text-sm text-gray-500">Shipping and taxes calculated at checkout.</p>
-                <div className="mt-6"><button onClick={onCheckout} className="w-full flex justify-center items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-green-600 hover:bg-green-700"><MessageCircle className="h-5 w-5 mr-2" />Order on WhatsApp</button></div>
-                <div className="mt-6 flex justify-center text-sm text-center text-gray-500"><p>or{' '}<button type="button" className="text-indigo-600 font-medium hover:text-indigo-500" onClick={onClose}>Continue Shopping<span aria-hidden="true"> &rarr;</span></button></p></div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const WishlistDrawer = ({ isOpen, onClose, wishlist, addToCart, removeFromWishlist }) => {
-  // ... (same content as previous)
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      <div className="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 pl-10 max-w-full flex">
-        <div className="w-screen max-w-md">
-          <div className="h-full flex flex-col bg-white shadow-xl">
-            <div className="flex-1 py-6 overflow-y-auto px-4 sm:px-6">
-              <div className="flex items-start justify-between">
-                <h2 className="text-lg font-medium text-gray-900">My Wishlist ({wishlist.length})</h2>
-                <div className="ml-3 h-7 flex items-center">
-                  <button onClick={onClose} className="-m-2 p-2 text-gray-400 hover:text-gray-500">
-                    <X className="h-6 w-6" />
-                  </button>
-                </div>
-              </div>
-              <div className="mt-8">
-                {wishlist.length === 0 ? (
-                   <div className="text-center py-10 text-gray-500">Your wishlist is empty.</div>
-                ) : (
-                  <div className="flow-root">
-                    <ul className="-my-6 divide-y divide-gray-200">
-                      {wishlist.map((item) => (
-                        <li key={item.id} className="py-6 flex">
-                          <div className="flex-shrink-0 w-24 h-24 border border-gray-200 rounded-md overflow-hidden">
-                            <img src={item.images[0]} alt={item.name} className="w-full h-full object-center object-cover" />
-                          </div>
-                          <div className="ml-4 flex-1 flex flex-col">
-                            <div>
-                              <div className="flex justify-between text-base font-medium text-gray-900">
-                                <h3>{item.name}</h3>
-                                <p className="ml-4">₹{item.price}</p>
-                              </div>
-                            </div>
-                            <div className="flex-1 flex items-end justify-between text-sm">
-                              <button onClick={() => addToCart(item)} className="text-indigo-600 font-medium hover:text-indigo-500">Move to Cart</button>
-                              <button onClick={() => removeFromWishlist(item.id)} className="text-red-600 font-medium hover:text-red-500">Remove</button>
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const SearchOverlay = ({ isOpen, onClose, products, onProductClick }) => {
-    // ... (same content as previous)
-    const [query, setQuery] = useState('');
-  if (!isOpen) return null;
-  const filtered = products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || p.category.toLowerCase().includes(query.toLowerCase()));
-  return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex justify-center items-start pt-20" onClick={onClose}>
-      <div className="bg-white w-full max-w-2xl rounded-lg shadow-2xl mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
-        <div className="p-4 border-b border-gray-200 flex items-center">
-          <Search className="h-5 w-5 text-gray-400 mr-3" />
-          <input type="text" placeholder="Search for products..." className="flex-1 outline-none text-lg" value={query} onChange={e => setQuery(e.target.value)} autoFocus />
-          <button onClick={onClose}><X className="h-5 w-5 text-gray-500 hover:text-red-500"/></button>
-        </div>
-        {query && (
-          <div className="max-h-96 overflow-y-auto">
-            {filtered.length === 0 ? <div className="p-8 text-center text-gray-500">No products found.</div> : filtered.map(p => (
-              <div key={p.id} onClick={() => { onProductClick(p); onClose(); }} className="flex items-center p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0">
-                <img src={p.images[0]} alt={p.name} className="w-12 h-12 object-cover rounded mr-4" />
-                <div><p className="font-medium text-gray-900">{p.name}</p><p className="text-sm text-gray-500">₹{p.price}</p></div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const SupportChat = ({ isOpen, onClose, storeSettings }) => {
-    // ... (same content as previous)
-    const [messages, setMessages] = useState([
-    { text: `Hi! Welcome to ${storeSettings.name} AI Support. How can I help you today?`, sender: 'bot' }
-  ]);
-  const [input, setInput] = useState("");
-  const messagesEndRef = useRef(null);
-
-  useEffect(() => { if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, isOpen]);
-
-  const openWhatsAppSupport = () => {
-    const text = encodeURIComponent(`Hello ${storeSettings.name} Support, I need help.`);
-    window.open(`https://wa.me/${storeSettings.contact.whatsapp}?text=${text}`, '_blank');
-  };
-
-  const handleSend = () => {
-    if (!input.trim()) return;
-    const userMsg = { text: input, sender: 'user' };
-    setMessages(prev => [...prev, userMsg]);
-    setInput("");
-    setTimeout(() => {
-      let botResponse = "";
-      let isWhatsApp = false;
-      const lowerInput = input.toLowerCase();
-      if (lowerInput.includes("order") || lowerInput.includes("track") || lowerInput.includes("help") || lowerInput.includes("human") || lowerInput.includes("whatsapp")) {
-        botResponse = "For detailed support or tracking, please connect with our expert on WhatsApp.";
-        isWhatsApp = true;
-      } else if (lowerInput.includes("hello") || lowerInput.includes("hi")) {
-        botResponse = `Hello! Welcome to ${storeSettings.name}. How can I assist you?`;
-      } else {
-        botResponse = "I'm not sure about that. Would you like to chat with a human on WhatsApp?";
-        isWhatsApp = true;
-      }
-      setMessages(prev => [...prev, { text: botResponse, sender: 'bot', isWhatsApp }]);
-    }, 1000);
-  };
-
-  if (!isOpen) return null;
-  return (
-    <div className="fixed bottom-4 right-4 z-50 w-80 md:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in slide-in-from-bottom-10">
-      <div className="bg-indigo-600 p-4 flex justify-between items-center text-white">
-        <div className="flex items-center"><MessageCircle className="h-5 w-5 mr-2" /><span className="font-bold">AI Support</span></div>
-        <button onClick={onClose}><X className="h-5 w-5" /></button>
-      </div>
-      <div className="h-80 overflow-y-auto p-4 bg-gray-50 space-y-3">
-        {messages.map((msg, idx) => (
-          <div key={idx} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
-            <div className={`max-w-[85%] p-3 rounded-lg text-sm ${msg.sender === 'user' ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none shadow-sm'}`}>{msg.text}</div>
-            {msg.isWhatsApp && (
-              <button onClick={openWhatsAppSupport} className="mt-2 bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 px-4 rounded-full flex items-center shadow-sm transition-colors"><MessageCircle className="h-3 w-3 mr-1" />Chat on WhatsApp</button>
-            )}
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-      <div className="p-3 bg-white border-t border-gray-100 flex"><input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} placeholder="Type a message..." className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-indigo-600" /><button onClick={handleSend} className="ml-2 bg-indigo-600 text-white p-2 rounded-full hover:bg-indigo-700"><Send className="h-4 w-4" /></button></div>
     </div>
   );
 };
@@ -694,21 +736,77 @@ const AdminPanel = ({ isOpen, onClose, products, setProducts, storeSettings, set
   );
 };
 
+const SupportChat = ({ isOpen, onClose, storeSettings }) => {
+  const [messages, setMessages] = useState([
+    { text: `Hi! Welcome to ${storeSettings.name} AI Support. How can I help you today?`, sender: 'bot' }
+  ]);
+  const [input, setInput] = useState("");
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => { if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, isOpen]);
+
+  const openWhatsAppSupport = () => {
+    const text = encodeURIComponent(`Hello ${storeSettings.name} Support, I need help.`);
+    window.open(`https://wa.me/${storeSettings.contact.whatsapp}?text=${text}`, '_blank');
+  };
+
+  const handleSend = () => {
+    if (!input.trim()) return;
+    const userMsg = { text: input, sender: 'user' };
+    setMessages(prev => [...prev, userMsg]);
+    setInput("");
+    setTimeout(() => {
+      let botResponse = "";
+      let isWhatsApp = false;
+      const lowerInput = input.toLowerCase();
+      if (lowerInput.includes("order") || lowerInput.includes("track") || lowerInput.includes("help") || lowerInput.includes("human") || lowerInput.includes("whatsapp")) {
+        botResponse = "For detailed support or tracking, please connect with our expert on WhatsApp.";
+        isWhatsApp = true;
+      } else if (lowerInput.includes("hello") || lowerInput.includes("hi")) {
+        botResponse = `Hello! Welcome to ${storeSettings.name}. How can I assist you?`;
+      } else {
+        botResponse = "I'm not sure about that. Would you like to chat with a human on WhatsApp?";
+        isWhatsApp = true;
+      }
+      setMessages(prev => [...prev, { text: botResponse, sender: 'bot', isWhatsApp }]);
+    }, 1000);
+  };
+
+  if (!isOpen) return null;
+  return (
+    <div className="fixed bottom-4 right-4 z-50 w-80 md:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-in slide-in-from-bottom-10">
+      <div className="bg-indigo-600 p-4 flex justify-between items-center text-white">
+        <div className="flex items-center"><MessageCircle className="h-5 w-5 mr-2" /><span className="font-bold">AI Support</span></div>
+        <button onClick={onClose}><X className="h-5 w-5" /></button>
+      </div>
+      <div className="h-80 overflow-y-auto p-4 bg-gray-50 space-y-3">
+        {messages.map((msg, idx) => (
+          <div key={idx} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
+            <div className={`max-w-[85%] p-3 rounded-lg text-sm ${msg.sender === 'user' ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none shadow-sm'}`}>{msg.text}</div>
+            {msg.isWhatsApp && (
+              <button onClick={openWhatsAppSupport} className="mt-2 bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 px-4 rounded-full flex items-center shadow-sm transition-colors"><MessageCircle className="h-3 w-3 mr-1" />Chat on WhatsApp</button>
+            )}
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+      <div className="p-3 bg-white border-t border-gray-100 flex"><input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend()} placeholder="Type a message..." className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-indigo-600" /><button onClick={handleSend} className="ml-2 bg-indigo-600 text-white p-2 rounded-full hover:bg-indigo-700"><Send className="h-4 w-4" /></button></div>
+    </div>
+  );
+};
+
 const App = () => {
   const [user, setUser] = useState(null);
-  const [products, setProducts] = useState(INITIAL_PRODUCTS);
-  const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [storeSettings, setStoreSettings] = useState(INITIAL_SETTINGS);
   const [storeStats, setStoreStats] = useState({ sales: 45200, orders: 12 });
-  
+  const [loading, setLoading] = useState(true); // Loading state
+
   const [cartItems, setCartItems] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [shopMode, setShopMode] = useState('retail');
-  
-  // Auth State with LocalStorage
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('wb_admin_auth') === 'true';
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
@@ -725,24 +823,7 @@ const App = () => {
   const showToast = (message, type = 'success') => { setToast({ message, type }); setTimeout(() => setToast(null), 3000); };
   const showConfirm = (message, onConfirm) => { setConfirmModal({ isOpen: true, message, onConfirm: () => { onConfirm(); setConfirmModal({ isOpen: false, message: '', onConfirm: null }); } }); };
 
-  // --- Auth Handlers ---
-  const handleAdminLogin = (pwd) => {
-    if (pwd === 'Vikas@admin@123') {
-      setIsAuthenticated(true);
-      localStorage.setItem('wb_admin_auth', 'true');
-      showToast("Admin Logged In");
-    } else {
-      showToast('Incorrect Password!', 'error');
-    }
-  };
-
-  const handleAdminLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('wb_admin_auth');
-    showToast("Logged Out");
-  };
-
-  // --- Firebase Listeners ---
+  // --- Firebase Auth & Data Listeners ---
   useEffect(() => {
     const initAuth = async () => {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -755,6 +836,8 @@ const App = () => {
 
     const unsubscribeAuth = onAuthStateChanged(auth, (u) => {
         setUser(u);
+        // Persist Admin Login State
+        if(localStorage.getItem('lf_admin_auth') === 'true') setIsAuthenticated(true);
     });
     
     return () => unsubscribeAuth();
@@ -765,15 +848,41 @@ const App = () => {
 
     const unsubProducts = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'products'), (snapshot) => {
         const prods = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        if (prods.length > 0) setProducts(prods);
+        if (prods.length === 0 && snapshot.empty) {
+             // Auto-seed on first run if empty
+             const batch = writeBatch(db);
+             INITIAL_PRODUCTS.forEach(p => {
+                const docRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'products'));
+                batch.set(docRef, p);
+             });
+             batch.commit().catch(console.error);
+        } else {
+            setProducts(prods);
+        }
+        setLoading(false);
+    }, (error) => {
+        console.log("Product listener error:", error);
+        setLoading(false);
     });
 
     const unsubConfig = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'config'), (snapshot) => {
+        let settingsFound = false;
         snapshot.docs.forEach(doc => {
-            if (doc.id === 'mainSettings') setStoreSettings(doc.data());
+            if (doc.id === 'mainSettings') { setStoreSettings(doc.data()); settingsFound = true; }
             if (doc.id === 'categories') setCategories(doc.data().list || INITIAL_CATEGORIES);
             if (doc.id === 'stats') setStoreStats(doc.data());
         });
+        
+        // Seed config if missing
+        if (!settingsFound && snapshot.empty) {
+            const batch = writeBatch(db);
+            batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'mainSettings'), INITIAL_SETTINGS);
+            batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'categories'), { list: INITIAL_CATEGORIES });
+            batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'stats'), { sales: 45200, orders: 12 });
+            batch.commit().catch(console.error);
+        }
+    }, (error) => {
+         console.log("Config listener error:", error);
     });
 
     return () => { unsubProducts(); unsubConfig(); };
@@ -781,27 +890,35 @@ const App = () => {
 
   // --- Firebase Actions ---
   const onSaveProduct = async (productData) => {
-      if(!user) return;
-      if (productData.id) {
-          await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', productData.id), productData);
-          showToast("Product Updated Globally!");
-      } else {
-          const { id, ...data } = productData; 
-          await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), data);
-          showToast("New Product Added Globally!");
+      if(!user) { showToast("Login required to save", "error"); return; }
+      try {
+        if (productData.id) {
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', productData.id), productData);
+            showToast("Product Updated!");
+        } else {
+            const { id, ...data } = productData; 
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), data);
+            showToast("New Product Added!");
+        }
+      } catch (e) {
+          showToast("Error saving product", "error");
       }
   };
 
   const onDeleteProduct = async (id) => {
       if(!user) return;
-      await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id));
-      showToast("Product Deleted Globally!");
+      try {
+        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', id));
+        showToast("Product Deleted!");
+      } catch (e) {
+          showToast("Error deleting product", "error");
+      }
   };
 
   const onSaveSettings = async (newSettings) => {
       if(!user) return;
       await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'mainSettings'), newSettings);
-      showToast("Settings Saved Globally!");
+      showToast("Settings Saved!");
   };
 
   const onAddCategory = async (newCat) => {
@@ -825,8 +942,31 @@ const App = () => {
   };
 
   const handleResetData = async () => {
-      // Manual Reset Logic for demo
-      showToast("Reset logic triggered (simulated).", "info");
+      if(!user) return;
+      // Simplified reset for this environment
+      const batch = writeBatch(db);
+      // Note: Deleting collection is hard in client SDK, re-seeding overrides if we clear local first.
+      // Ideally manually clear DB in console or use cloud function. 
+      // Here we just re-upload defaults to overwrite key configs.
+      batch.set(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'mainSettings'), INITIAL_SETTINGS);
+      await batch.commit();
+      showToast("Settings Reset to Defaults");
+  };
+
+  const handleAdminLogin = (pwd) => {
+    if (pwd === 'Vikas@admin@123') {
+      setIsAuthenticated(true);
+      localStorage.setItem('lf_admin_auth', 'true');
+      showToast("Admin Logged In");
+    } else {
+      showToast('Incorrect Password!', 'error');
+    }
+  };
+
+  const handleAdminLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('lf_admin_auth');
+    showToast("Logged Out");
   };
 
 
@@ -854,6 +994,17 @@ const App = () => {
   const handleProductClick = (product) => setSelectedProduct(product);
   const handleWhatsAppCheckout = () => { const phoneNumber = storeSettings.contact.whatsapp; const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0); let message = `Hello ${storeSettings.name},\nI would like to place a ${shopMode.toUpperCase()} order:\n\n`; cartItems.forEach(item => { message += `• ${item.name} ${item.mode === 'wholesale' ? '(Wholesale)' : ''}\n  Qty: ${item.quantity} | Price: ₹${item.price}\n`; }); message += `\n*Total: ₹${total}*\n`; window.open(`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`, '_blank'); setIsCartOpen(false); setCartItems([]); };
   const toggleShopMode = (mode) => { if (mode) setShopMode(mode); else setShopMode(prev => prev === 'retail' ? 'wholesale' : 'retail'); };
+
+  if (loading) {
+      return (
+          <div className="flex items-center justify-center h-screen bg-gray-50">
+              <div className="text-center">
+                  <Loader className="h-10 w-10 text-indigo-600 animate-spin mx-auto mb-4" />
+                  <p className="text-gray-500 font-medium">Loading Store Data...</p>
+              </div>
+          </div>
+      );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900 relative">

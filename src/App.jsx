@@ -59,7 +59,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'little-flame-store';
 
-// --- Initial Data for Seeding ---
+// --- Initial Data for Seeding (Defaults) ---
 const INITIAL_CATEGORIES = ["All", "Electronics", "Fashion", "Home", "Accessories"];
 
 const INITIAL_PRODUCTS = [
@@ -150,6 +150,8 @@ const INITIAL_SETTINGS = {
     youtube: "#"
   }
 };
+
+const INITIAL_STATS = { sales: 45200, orders: 12 };
 
 // --- Helper Components ---
 
@@ -338,7 +340,7 @@ const ProductDetails = ({ product, onBack, addToCart, toggleWishlist, isInWishli
   );
 };
 
-const AdminPanel = ({ isOpen, onClose, products, setProducts, storeSettings, setStoreSettings, isAuthenticated, setIsAuthenticated, categories, setCategories, storeStats, setStoreStats, onResetData, showToast, showConfirm, onSaveProduct, onDeleteProduct, onSaveSettings, onAddCategory, onDeleteCategory, onSaveStats }) => {
+const AdminPanel = ({ isOpen, onClose, products, storeSettings, isAuthenticated, setIsAuthenticated, categories, storeStats, onSaveProduct, onDeleteProduct, onSaveSettings, onAddCategory, onDeleteCategory, onSaveStats, onResetData, showToast, showConfirm }) => {
   const [password, setPassword] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [productForm, setProductForm] = useState({ id: null, name: '', price: '', wholesalePrice: '', moq: 5, category: 'Electronics', images: ["", "", "", "", "", ""], video: '', description: '' });
@@ -358,10 +360,9 @@ const AdminPanel = ({ isOpen, onClose, products, setProducts, storeSettings, set
   const handleLogout = () => { setIsAuthenticated(false); setPassword(''); };
 
   const handleDeleteProduct = (id, e) => {
-    e.stopPropagation(); // Prevent bubble
+    e.stopPropagation();
     showConfirm("Are you sure you want to delete this product permanently?", () => {
       onDeleteProduct(id);
-      setProducts(prev => prev.filter(p => p.id !== id));
     });
   };
 
@@ -373,14 +374,14 @@ const AdminPanel = ({ isOpen, onClose, products, setProducts, storeSettings, set
     setActiveTab('editor');
   };
 
-  const handleImageChange = (index, value) => { const newImages = [...productForm.images]; newImages[index] = value; setProductForm({...productForm, images: newImages}); };
-
-  const handleProductSubmit = () => {
+  const handleSaveProduct = () => {
     if (!productForm.name || !productForm.price) { showToast("Name and Retail Price are required!", 'error'); return; }
     const productData = { ...productForm, price: Number(productForm.price), wholesalePrice: productForm.wholesalePrice ? Number(productForm.wholesalePrice) : undefined, moq: productForm.moq ? Number(productForm.moq) : 5 };
     onSaveProduct(productData);
     setProductForm({ id: null, name: '', price: '', wholesalePrice: '', moq: 5, category: categories[1] || 'Electronics', images: ["", "", "", "", "", ""], video: '', description: '' });
   };
+
+  const handleImageChange = (index, value) => { const newImages = [...productForm.images]; newImages[index] = value; setProductForm({...productForm, images: newImages}); };
 
   return (
     <div className="fixed inset-0 z-[60] bg-gray-900 flex items-center justify-center">
@@ -407,9 +408,8 @@ const AdminPanel = ({ isOpen, onClose, products, setProducts, storeSettings, set
               <button onClick={() => setActiveTab('settings')} className={`w-full text-left p-3 rounded-lg font-medium flex items-center ${activeTab === 'settings' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-200 text-gray-700'}`}><Settings className="h-4 w-4 mr-2" /> Settings</button>
               <div className="flex-1"></div>
               <button onClick={() => { 
-                  showConfirm("Reset all data to default?", () => {
+                  showConfirm("Reset all data to defaults? This will clear custom data.", () => {
                       onResetData();
-                      showToast("Data Reset Complete");
                   });
               }} className="w-full text-left p-3 rounded-lg font-medium flex items-center text-orange-600 hover:bg-orange-50"><RefreshCw className="h-4 w-4 mr-2" /> Reset All Data</button>
               <button onClick={handleLogout} className="w-full text-left p-3 rounded-lg font-medium flex items-center text-red-600 hover:bg-red-50"><LogOut className="h-4 w-4 mr-2" /> Logout</button>
@@ -445,7 +445,9 @@ const AdminPanel = ({ isOpen, onClose, products, setProducts, storeSettings, set
                 <div>
                   <h2 className="text-2xl font-bold mb-6">Manage Categories</h2>
                   <div className="flex mb-6"><input className="flex-1 p-3 border rounded-l-lg" placeholder="New Category Name" value={newCategory} onChange={e => setNewCategory(e.target.value)} /><button onClick={() => { onAddCategory(newCategory); setNewCategory(''); }} className="bg-green-600 text-white px-6 rounded-r-lg font-bold hover:bg-green-700">Add</button></div>
-                  <div className="space-y-2">{categories.map(cat => (<div key={cat} className="flex justify-between items-center bg-white p-3 rounded border border-gray-200"><span className="font-medium">{cat}</span>{cat !== 'All' && <button onClick={() => onDeleteCategory(cat)} className="text-red-500 hover:bg-red-50 p-2"><Trash2 className="h-4 w-4"/></button>}</div>))}</div>
+                  <div className="space-y-2">{categories.map(cat => (<div key={cat} className="flex justify-between items-center bg-white p-3 rounded border border-gray-200"><span className="font-medium">{cat}</span>{cat !== 'All' && <button onClick={() => {
+                       showConfirm(`Delete category "${cat}"?`, () => onDeleteCategory(cat));
+                  }} className="text-red-500 hover:bg-red-50 p-2"><Trash2 className="h-4 w-4"/></button>}</div>))}</div>
                 </div>
               )}
               {activeTab === 'editor' && (
@@ -837,8 +839,26 @@ const App = () => {
   };
 
   const handleResetData = async () => {
-      // Manual Reset Logic for demo
-      showToast("Reset logic triggered (simulated).", "info");
+      if(!user) return;
+      
+      // 1. Delete existing products
+      const prodsRef = collection(db, 'artifacts', appId, 'public', 'data', 'products');
+      const snapshot = await getDocs(prodsRef);
+      snapshot.forEach(async (d) => {
+          await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', d.id));
+      });
+
+      // 2. Reseed Products
+      INITIAL_PRODUCTS.forEach(async p => {
+          await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), p);
+      });
+
+      // 3. Reset Config
+      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'mainSettings'), INITIAL_SETTINGS);
+      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'categories'), { list: INITIAL_CATEGORIES });
+      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'stats'), { sales: 45200, orders: 12 });
+
+      showToast("Database Reset to Defaults!");
   };
 
 
